@@ -384,3 +384,12 @@ html.sem-carga .carga{display:none}
   .carga .wm{font-size:9.5px;letter-spacing:.38em;padding-left:.38em;margin-top:12%}
   .carga .barra{width:62%;height:1.5px;margin-top:11%}
 }
+
+/* ---------- Capas dos livros (Nossos autores) ---------- */
+.livro{grid-template-columns:92px 1fr;gap:0 18px;padding:18px;align-items:start}
+.livro .capa-livro{grid-row:1 / span 4;grid-column:1;width:92px;height:auto;display:block;background:#e9ecf1;box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 14px rgba(18,50,97,.14);transition:transform .25s ease}
+.livro:hover .capa-livro{transform:translateY(-3px)}
+.livro span.sem-capa{grid-column:1;aspect-ratio:2/3;display:flex;align-items:flex-end;padding:12px 10px;background:linear-gradient(160deg,#2d2e30,#4a4b4e);box-shadow:inset 6px 0 0 rgba(255,255,255,.08),0 6px 14px rgba(18,50,97,.14)}
+.livro .sem-capa small{font-family:var(--titulo);font-weight:700;font-size:10.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.02em;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.livro b,.livro i,.livro span:not(.capa-livro),.livro em{grid-column:2}
+@media (min-width:768px){.livro{grid-template-columns:104px 1fr}.livro .capa-livro{width:104px}}
