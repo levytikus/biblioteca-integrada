@@ -1,0 +1,12 @@
+200 01a JPEG image data, Exif standard: [TIFF image data, little-end
+200 02a JPEG image data, Exif standard: [TIFF image data, little-end
+200 03a JPEG image data, JFIF standard 1.01, resolution (DPI), densi
+200 04a JPEG image data, baseline, precision 8, 1000x1000, component
+200 04b JPEG image data, JFIF standard 1.01, resolution (DPI), densi
+200 05a JPEG image data, Exif standard: [TIFF image data, little-end
+200 06a JPEG image data, JFIF standard 1.01, resolution (DPI), densi
+200 07a JPEG image data, JFIF standard 1.01, aspect ratio, density 1
+FALHOU 13p https://proarq.fau.ufrj.br/public/upload/2022-04-25/130d6c6326474720327180eb4a9da7bc.pdf
+200 16b JPEG image data, JFIF standard 1.01, resolution (DPI), densi
+OK 21p
+OK 22p
