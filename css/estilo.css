@@ -331,3 +331,8 @@ html.sem-carga .carga{display:none}
 .info-v span{font-size:15px;line-height:1.5;color:var(--texto-2);overflow-wrap:anywhere}
 .visite .acao{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
 @media (max-width:560px){.visite h2{font-size:26px}.visite .acao .botao{width:100%;text-align:center}}
+
+/* ---------- FAQ resumido na inicial ---------- */
+.faq-resumo{padding-top:70px;padding-bottom:90px;border-top:1px solid #e3e6eb;max-width:900px;margin:0 auto}
+.faq-resumo .acao{text-align:center;margin-top:16px}
+.faq .botao{text-decoration:none}
