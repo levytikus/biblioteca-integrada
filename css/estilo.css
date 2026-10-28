@@ -336,3 +336,16 @@ html.sem-carga .carga{display:none}
 .faq-resumo{padding-top:70px;padding-bottom:90px;border-top:1px solid #e3e6eb;max-width:900px;margin:0 auto}
 .faq-resumo .acao{text-align:center;margin-top:16px}
 .faq .botao{text-decoration:none}
+
+/* ---------- Hierarquia: nome da biblioteca acima das seções ---------- */
+.capa h1{font-size:clamp(36px,calc(2.6vw + 26px),56px);letter-spacing:.005em}
+.capa .tit{padding-bottom:30px}
+.atalhos{padding-top:88px}
+.atalhos h2,.passos h2,.faq-resumo h2{font-size:21px;font-weight:500;letter-spacing:.01em;color:#3a3f47}
+.passos h2{color:#e6ecf5}
+.atalhos h2{margin-bottom:30px}
+@media (min-width:768px){
+  .atalhos{padding-top:100px}
+  .atalhos h2,.passos h2,.faq-resumo h2{font-size:23px}
+}
+@media (max-width:560px){.atalhos{padding-top:72px}.atalhos h2{font-size:20px}}
