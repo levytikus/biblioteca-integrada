@@ -355,3 +355,21 @@ html.sem-carga .carga{display:none}
 .faq .itens{max-width:980px}
 @media (min-width:768px){.faq .itens{column-gap:64px}}
 @media (max-width:560px){.faq{padding-left:16px;padding-right:16px}}
+
+/* ---------- FAQ resumido no mesmo desenho do passo a passo ---------- */
+.faq-resumo{padding:64px 22px 70px;max-width:none}
+.faq-resumo h2{margin:0 0 10px}
+.faq-resumo .sub{text-align:center;color:var(--texto-2);font-size:17px;margin:0 auto 40px;max-width:520px}
+.faq-resumo .itens{columns:auto;max-width:640px;margin:0 auto;display:grid;gap:30px}
+.faq-resumo .item{padding:0;display:grid;grid-template-columns:52px 1fr;gap:4px 16px;align-items:start}
+.faq-resumo .item::before{content:"?";grid-row:span 2;font-family:var(--titulo);font-weight:700;font-size:34px;line-height:1;color:var(--azul)}
+.faq-resumo h3{font-size:18px;font-weight:600;line-height:1.3;margin:0}
+.faq-resumo p{font-size:16.5px;line-height:1.5;color:var(--texto-2)}
+.faq-resumo .acao{text-align:center;margin-top:40px}
+@media (min-width:768px){
+  .faq-resumo{padding:80px 24px 86px}
+  .faq-resumo .itens{grid-template-columns:1fr 1fr;gap:40px 44px}
+  .faq-resumo h3{font-size:18px}
+  .faq-resumo p{font-size:16.5px}
+}
+.faq-resumo .item{align-content:start}
