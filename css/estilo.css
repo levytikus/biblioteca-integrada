@@ -232,3 +232,24 @@ a{color:var(--azul)}
 
 .livro .lombada{grid-row:1 / span 4;grid-column:1}
 .livro b,.livro i,.livro span:not(.lombada),.livro em{grid-column:2}
+
+/* ---------- Tela de carregamento (Traço) ---------- */
+.carga{position:fixed;inset:0;z-index:200;background:var(--fundo);display:grid;place-items:center}
+.carga .cj{width:min(52vw,300px);display:flex;flex-direction:column;align-items:center}
+.carga .marca-bi{width:100%;height:auto;display:block;overflow:visible}
+.carga .co{fill:none;stroke:#111;stroke-width:44;stroke-linejoin:miter;stroke-linecap:butt;stroke-dasharray:1;stroke-dashoffset:1}
+.carga .le{transform-box:fill-box;transform-origin:center;opacity:0;transform:translateY(14%)}
+.carga .wm{margin:9% 0 0;font:500 clamp(10px,2.8vw,13px) var(--sans);letter-spacing:.42em;padding-left:.42em;text-transform:uppercase;color:#111;white-space:nowrap;opacity:0;transform:translateY(6px)}
+.carga .barra{width:70%;height:2px;background:#d9dee6;margin-top:10%;overflow:hidden}
+.carga .barra i{display:block;height:100%;width:100%;background:var(--azul);transform:scaleX(0);transform-origin:left}
+@keyframes c-encher{to{transform:scaleX(1)}}
+@keyframes c-some{to{opacity:1;transform:none}}
+@keyframes c-desenha{to{stroke-dashoffset:0}}
+.carga.play .barra i{animation:c-encher 3.6s cubic-bezier(.45,0,.2,1) forwards}
+.carga.play .co{animation:c-desenha 1.4s cubic-bezier(.6,0,.3,1) forwards}
+.carga.play .co-d{animation-delay:.25s}
+.carga.play .le{animation:c-some .55s ease forwards;animation-delay:calc(1.1s + var(--i)*.11s)}
+.carga.play .wm{animation:c-some .7s ease 2.5s forwards}
+.carga.sai{opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s .5s}
+html.sem-carga .carga{display:none}
+@media (prefers-reduced-motion:reduce){.carga *{animation-duration:.01s!important;animation-delay:0s!important}}

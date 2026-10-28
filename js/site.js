@@ -39,3 +39,14 @@
     }
   }
 })();
+
+// Tela de carregamento: uma vez por visita
+(function(){
+  var c=document.getElementById('carga'); if(!c) return;
+  var visto=false; try{visto=sessionStorage.getItem('bi-carga')==='1'}catch(e){}
+  if(visto){c.remove();return;}
+  try{sessionStorage.setItem('bi-carga','1')}catch(e){}
+  document.documentElement.style.overflow='hidden';
+  requestAnimationFrame(function(){c.classList.add('play')});
+  setTimeout(function(){c.classList.add('sai');document.documentElement.style.overflow='';setTimeout(function(){c.remove()},600)},3700);
+})();
