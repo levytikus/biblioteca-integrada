@@ -298,3 +298,36 @@ html.sem-carga .carga{display:none}
   .capa .escuro{animation:capa-escurece linear both;animation-timeline:scroll(root);animation-range:0 calc(100svh - var(--cab))}
 }
 @media (prefers-reduced-motion:reduce){.capa .escuro{animation:none}}
+
+/* ---------- Passos em azul ---------- */
+.passos{background:var(--azul);color:#fff;padding:64px 22px 70px;margin-top:40px}
+.passos h2{color:#fff}
+.passos .sub{color:#c9d4e6}
+.passos li::before{color:#8fb0e0}
+.passos li b{color:#fff}
+.passos li span{color:#c9d4e6}
+.passos .botao{background:#fff;color:var(--azul)}
+.passos .botao:hover{filter:none;background:#e8eef7}
+@media (min-width:768px){.passos{padding:80px 24px 86px}}
+
+/* ---------- Vitrine do autor ---------- */
+.vitrine{max-width:860px;margin:0 auto;padding:70px 22px 30px}
+.vitrine .sobre{margin:0 0 14px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#5a606a}
+.vitrine .rotulo{display:inline-block;background:#3a3b3d;color:#fff;font-size:14px;font-weight:500;letter-spacing:.08em;padding:9px 20px;margin-bottom:18px}
+.vitrine h2{font-family:var(--titulo);font-weight:700;font-size:clamp(28px,4vw,36px);text-transform:uppercase;margin:0 0 14px;color:var(--texto)}
+.vitrine .bio{font-size:17px;line-height:1.6;color:var(--texto-2);margin:0}
+.vitrine .acao{text-align:center;margin-top:34px}
+.botao.contorno{background:transparent;color:var(--azul);border:1.5px solid var(--azul);padding:13.5px 24.5px}
+.botao.contorno:hover{background:var(--azul);color:#fff;filter:none}
+
+/* ---------- Venha nos visitar ---------- */
+.visite{padding:60px 16px 90px}
+.visite h2{font-family:var(--sans);font-weight:600;font-size:30px;line-height:1.2;text-align:center;margin:0 0 34px}
+.grade-visite{max-width:980px;margin:0 auto;display:grid;gap:12px}
+@media (min-width:760px){.grade-visite{grid-template-columns:repeat(3,1fr);gap:16px}}
+.info-v{background:#fff;border:1px solid #e3e6eb;padding:24px 20px 22px;display:flex;flex-direction:column;gap:6px}
+.info-v .ic{width:40px;height:40px;margin-bottom:10px;fill:none;stroke:var(--azul);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.info-v b{font-size:16.5px;font-weight:600}
+.info-v span{font-size:15px;line-height:1.5;color:var(--texto-2);overflow-wrap:anywhere}
+.visite .acao{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
+@media (max-width:560px){.visite h2{font-size:26px}.visite .acao .botao{width:100%;text-align:center}}
