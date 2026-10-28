@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=26">
+<link rel="stylesheet" href="css/estilo.css?v=27">
 </head>
 <body id="topo">
 
@@ -37,7 +37,7 @@
 
 <header class="cab">
   <div class="cab-in">
-    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no acervo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
+    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no site"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     <a class="marca" href="index.html" aria-label="Biblioteca Integrada, página inicial">
       <img src="logos/ufrj-compacta.png" alt="UFRJ" width="556" height="277">
       <span class="nome">Biblioteca Integrada</span>
@@ -66,13 +66,14 @@
 
 <div class="busca" id="busca" aria-hidden="true" role="dialog" aria-label="Pesquisar">
   <button class="fechar" data-fechar>Fechar pesquisa <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
-  <form action="https://minerva.ufrj.br/F" method="get" target="_blank">
-    <label for="q">Pesquisar no acervo (Base Minerva)</label>
+  <form class="busca-site" action="#" role="search" autocomplete="off">
+    <label for="q">Pesquisar no site</label>
     <div class="campo">
-      <input id="q" name="request" type="search" placeholder="Título, autor ou assunto" autocomplete="off">
-      <input type="hidden" name="func" value="find-b">
+      <input id="q" name="q" type="search" placeholder="Serviços, horários, normas, autores…" autocomplete="off" aria-controls="resultados">
       <button class="enviar" type="submit" aria-label="Buscar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     </div>
+    <div class="resultados" id="resultados" aria-live="polite"></div>
+    <p class="minerva-dica">Procurando um livro? <a id="linkMinerva" href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Pesquise no catálogo da Base Minerva</a></p>
   </form>
 </div>
 
@@ -127,6 +128,6 @@
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>try{new window.VLibras.Widget('https://vlibras.gov.br/app');}catch(e){}</script>
 <script>document.documentElement.classList.add("js-ic")</script>
-<script src="js/site.js?v=23"></script>
+<script src="js/site.js?v=24"></script>
 </body>
 </html>

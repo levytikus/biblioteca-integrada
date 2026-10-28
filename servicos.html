@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=26">
+<link rel="stylesheet" href="css/estilo.css?v=27">
 </head>
 <body id="topo">
 
@@ -37,7 +37,7 @@
 
 <header class="cab">
   <div class="cab-in">
-    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no acervo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
+    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no site"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     <a class="marca" href="index.html" aria-label="Biblioteca Integrada, página inicial">
       <img src="logos/ufrj-compacta.png" alt="UFRJ" width="556" height="277">
       <span class="nome">Biblioteca Integrada</span>
@@ -66,13 +66,14 @@
 
 <div class="busca" id="busca" aria-hidden="true" role="dialog" aria-label="Pesquisar">
   <button class="fechar" data-fechar>Fechar pesquisa <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
-  <form action="https://minerva.ufrj.br/F" method="get" target="_blank">
-    <label for="q">Pesquisar no acervo (Base Minerva)</label>
+  <form class="busca-site" action="#" role="search" autocomplete="off">
+    <label for="q">Pesquisar no site</label>
     <div class="campo">
-      <input id="q" name="request" type="search" placeholder="Título, autor ou assunto" autocomplete="off">
-      <input type="hidden" name="func" value="find-b">
+      <input id="q" name="q" type="search" placeholder="Serviços, horários, normas, autores…" autocomplete="off" aria-controls="resultados">
       <button class="enviar" type="submit" aria-label="Buscar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     </div>
+    <div class="resultados" id="resultados" aria-live="polite"></div>
+    <p class="minerva-dica">Procurando um livro? <a id="linkMinerva" href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Pesquise no catálogo da Base Minerva</a></p>
   </form>
 </div>
 
@@ -84,9 +85,9 @@
     <p>A Biblioteca Integrada oferece muito mais do que consulta e empréstimo de livros. Conheça como podemos apoiar a sua jornada acadêmica.</p>
 
     <div class="secao" id="cadastro">
-      <h2 class="grande">Cadastro e empréstimo</h2>
+      <h2 id="cadastro-e-emprestimo" class="grande">Cadastro e empréstimo</h2>
       <p>O cadastro permite o empréstimo domiciliar dos livros disponíveis no acervo: você leva os livros para casa e continua seus estudos fora da biblioteca.</p>
-      <h2>Como fazer</h2>
+      <h2 id="como-fazer">Como fazer</h2>
       <p>Direto no balcão de atendimento. Tenha em mãos:</p>
       <ul class="lista-num">
         <li>documento oficial com foto;</li>
@@ -97,7 +98,7 @@
     </div>
 
     <div class="secao" id="visita">
-      <h2 class="grande">Visita guiada</h2>
+      <h2 id="visita-guiada" class="grande">Visita guiada</h2>
       <p>Conheça o espaço, o acervo e os serviços com a nossa equipe.</p>
       <div class="horarios">
         <div class="horario"><b>Terças e quintas, 10h às 11h</b><span>Manhã</span></div>
@@ -108,7 +109,7 @@
     </div>
 
     <div class="secao" id="salas">
-      <h2 class="grande">Salas de estudo em grupo</h2>
+      <h2 id="salas-de-estudo-em-grupo" class="grande">Salas de estudo em grupo</h2>
       <p>Um espaço para estudar coletivamente, com vista para a área verde do nosso entorno.</p>
       <div class="medidas">
         <div class="medida"><span>Grupos de</span><b>3 a 6 pessoas</b></div>
@@ -120,18 +121,18 @@
     </div>
 
     <div class="secao" id="apoio">
-      <h2 class="grande">Apoio à pesquisa</h2>
+      <h2 id="apoio-a-pesquisa" class="grande">Apoio à pesquisa</h2>
       <div class="dicas">
-        <div class="dica"><h3>Auxílio em pesquisa</h3><p>Apoio na estruturação do trabalho, na busca de fontes confiáveis e na prevenção de plágio.</p></div>
-        <div class="dica"><h3>Orientação para trabalhos acadêmicos</h3><p>Ajuda com normas, referências e organização do conteúdo, para um trabalho com mais clareza.</p></div>
-        <div class="dica"><h3>Treinamentos</h3><p>Como navegar pelas bases de dados, localizar itens no acervo físico e submeter trabalhos no Pantheon, o repositório da UFRJ.</p></div>
-        <div class="dica"><h3>Oficina ABNT</h3><p>Normas de apresentação de TCCs, dissertações e teses. <a href="normalizacao.html">Ver horários</a>.</p></div>
+        <div class="dica"><h3 id="auxilio-em-pesquisa">Auxílio em pesquisa</h3><p>Apoio na estruturação do trabalho, na busca de fontes confiáveis e na prevenção de plágio.</p></div>
+        <div class="dica"><h3 id="orientacao-para-trabalhos-academicos">Orientação para trabalhos acadêmicos</h3><p>Ajuda com normas, referências e organização do conteúdo, para um trabalho com mais clareza.</p></div>
+        <div class="dica"><h3 id="treinamentos">Treinamentos</h3><p>Como navegar pelas bases de dados, localizar itens no acervo físico e submeter trabalhos no Pantheon, o repositório da UFRJ.</p></div>
+        <div class="dica"><h3 id="oficina-abnt">Oficina ABNT</h3><p>Normas de apresentação de TCCs, dissertações e teses. <a href="normalizacao.html">Ver horários</a>.</p></div>
       </div>
       <p>Quer saber mais ou agendar um atendimento? Escreva para <a href="mailto:bicirculacao@email.cla.ufrj.br">bicirculacao@email.cla.ufrj.br</a>.</p>
     </div>
 
     <div class="secao" id="boas-praticas">
-      <h2 class="grande">Boas práticas na biblioteca</h2>
+      <h2 id="boas-praticas-na-biblioteca" class="grande">Boas práticas na biblioteca</h2>
       <p>Pequenos cuidados que fazem diferença para todo mundo que usa o espaço e o acervo.</p>
       <ul class="cuidados">
         <li><b>Devolva no prazo.</b> Assim o livro fica disponível para a próxima pessoa.</li>
@@ -183,6 +184,6 @@
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>try{new window.VLibras.Widget('https://vlibras.gov.br/app');}catch(e){}</script>
 <script>document.documentElement.classList.add("js-ic")</script>
-<script src="js/site.js?v=23"></script>
+<script src="js/site.js?v=24"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=26">
+<link rel="stylesheet" href="css/estilo.css?v=27">
 </head>
 <body id="topo">
 
@@ -37,7 +37,7 @@
 
 <header class="cab">
   <div class="cab-in">
-    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no acervo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
+    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no site"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     <a class="marca" href="index.html" aria-label="Biblioteca Integrada, página inicial">
       <img src="logos/ufrj-compacta.png" alt="UFRJ" width="556" height="277">
       <span class="nome">Biblioteca Integrada</span>
@@ -66,67 +66,68 @@
 
 <div class="busca" id="busca" aria-hidden="true" role="dialog" aria-label="Pesquisar">
   <button class="fechar" data-fechar>Fechar pesquisa <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
-  <form action="https://minerva.ufrj.br/F" method="get" target="_blank">
-    <label for="q">Pesquisar no acervo (Base Minerva)</label>
+  <form class="busca-site" action="#" role="search" autocomplete="off">
+    <label for="q">Pesquisar no site</label>
     <div class="campo">
-      <input id="q" name="request" type="search" placeholder="Título, autor ou assunto" autocomplete="off">
-      <input type="hidden" name="func" value="find-b">
+      <input id="q" name="q" type="search" placeholder="Serviços, horários, normas, autores…" autocomplete="off" aria-controls="resultados">
       <button class="enviar" type="submit" aria-label="Buscar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     </div>
+    <div class="resultados" id="resultados" aria-live="polite"></div>
+    <p class="minerva-dica">Procurando um livro? <a id="linkMinerva" href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Pesquise no catálogo da Base Minerva</a></p>
   </form>
 </div>
 
 <main id="conteudo">
 
 <section class="faq faq-pagina" id="faq">
-  <h2>FAQ: perguntas frequentes</h2>
+  <h2 id="faq-perguntas-frequentes">FAQ: perguntas frequentes</h2>
   <div class="itens">
       <div class="item">
-        <h3>Qual o horário de funcionamento?</h3>
+        <h3 id="qual-o-horario-de-funcionamento">Qual o horário de funcionamento?</h3>
         <p>De segunda a sexta-feira, das 8h às 17h.</p>
       </div>
       <div class="item">
-        <h3>Como faço meu cadastro na biblioteca?</h3>
+        <h3 id="como-faco-meu-cadastro-na-biblioteca">Como faço meu cadastro na biblioteca?</h3>
         <p>Diretamente no balcão de atendimento, com documento oficial com foto e um comprovante de vínculo com a UFRJ. Para agilizar, faça antes o <a href="https://forms.gle/aZsZdLqc8YbwFpTy5" target="_blank" rel="noopener">pré-cadastro online</a>: o cadastro é efetivado em até dois dias úteis.</p>
       </div>
       <div class="item">
-        <h3>Como sei se a biblioteca tem o livro que procuro?</h3>
+        <h3 id="como-sei-se-a-biblioteca-tem-o-livro-que-procuro">Como sei se a biblioteca tem o livro que procuro?</h3>
         <p>Pesquise na <a href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Base Minerva</a>, o catálogo das bibliotecas da UFRJ. No registro você confere a biblioteca, a localização e a situação do exemplar. Veja as <a href="pesquisa.html">dicas de pesquisa</a>.</p>
       </div>
       <div class="item">
-        <h3>Quantos livros posso pegar e por quanto tempo?</h3>
+        <h3 id="quantos-livros-posso-pegar-e-por-quanto-tempo">Quantos livros posso pegar e por quanto tempo?</h3>
         <p><span class="pendente">informar quantidade e prazo por tipo de usuário</span></p>
       </div>
       <div class="item">
-        <h3>Como renovo meu empréstimo?</h3>
+        <h3 id="como-renovo-meu-emprestimo">Como renovo meu empréstimo?</h3>
         <p>A renovação é feita na Base Minerva, com o seu login. Veja o <a href="https://www.instagram.com/p/DA3o01MOse1/" target="_blank" rel="noopener">passo a passo no nosso Instagram</a>.</p>
       </div>
       <div class="item">
-        <h3>Posso devolver aqui livros de outras bibliotecas da UFRJ?</h3>
+        <h3 id="posso-devolver-aqui-livros-de-outras-bibliotecas">Posso devolver aqui livros de outras bibliotecas da UFRJ?</h3>
         <p><span class="pendente">confirmar a regra</span></p>
       </div>
       <div class="item">
-        <h3>Como agendo uma visita guiada?</h3>
+        <h3 id="como-agendo-uma-visita-guiada">Como agendo uma visita guiada?</h3>
         <p>As visitas acontecem às terças e quintas, das 10h às 11h e das 14h às 15h. O pedido é feito pelo <a href="https://calendar.app.google/ryWxW36HFo3BbJdV9" target="_blank" rel="noopener">formulário online</a>.</p>
       </div>
       <div class="item">
-        <h3>Posso usar as salas de estudo em grupo?</h3>
+        <h3 id="posso-usar-as-salas-de-estudo-em-grupo">Posso usar as salas de estudo em grupo?</h3>
         <p>Sim. As salas recebem grupos de 3 a 6 pessoas, sem agendamento prévio, por um período inicial de 3 horas, prorrogável conforme a disponibilidade. É preciso ter inscrição ativa no Sistema de Bibliotecas da UFRJ.</p>
       </div>
       <div class="item">
-        <h3>Quem pode pedir a Oficina ABNT?</h3>
+        <h3 id="quem-pode-pedir-a-oficina-abnt">Quem pode pedir a Oficina ABNT?</h3>
         <p>Professores da EBA, da FAU e do IPPUR, para as suas turmas, com pelo menos 48 horas de antecedência. <a href="normalizacao.html">Ver horários</a>.</p>
       </div>
       <div class="item">
-        <h3>Como solicito um nada consta?</h3>
+        <h3 id="como-solicito-um-nada-consta">Como solicito um nada consta?</h3>
         <p>Pelo e-mail <a href="mailto:bicirculacao@email.cla.ufrj.br">bicirculacao@email.cla.ufrj.br</a>. <span class="pendente">confirmar dados necessários</span></p>
       </div>
       <div class="item">
-        <h3>Como faço para doar livros para a biblioteca?</h3>
+        <h3 id="como-faco-para-doar-livros-para-a-biblioteca">Como faço para doar livros para a biblioteca?</h3>
         <p><span class="pendente">informar a política de doações</span></p>
       </div>
       <div class="item">
-        <h3>Como falo com a biblioteca?</h3>
+        <h3 id="como-falo-com-a-biblioteca">Como falo com a biblioteca?</h3>
         <p>Pelo e-mail <a href="mailto:bicirculacao@email.cla.ufrj.br">bicirculacao@email.cla.ufrj.br</a>, pelo nosso <a href="https://www.instagram.com/bibliotecaintegradaufrj/" target="_blank" rel="noopener">Instagram</a> ou no balcão de atendimento.</p>
       </div>
   </div>
@@ -172,6 +173,6 @@
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>try{new window.VLibras.Widget('https://vlibras.gov.br/app');}catch(e){}</script>
 <script>document.documentElement.classList.add("js-ic")</script>
-<script src="js/site.js?v=23"></script>
+<script src="js/site.js?v=24"></script>
 </body>
 </html>

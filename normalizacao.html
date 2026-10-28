@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=26">
+<link rel="stylesheet" href="css/estilo.css?v=27">
 </head>
 <body id="topo">
 
@@ -37,7 +37,7 @@
 
 <header class="cab">
   <div class="cab-in">
-    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no acervo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
+    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no site"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     <a class="marca" href="index.html" aria-label="Biblioteca Integrada, página inicial">
       <img src="logos/ufrj-compacta.png" alt="UFRJ" width="556" height="277">
       <span class="nome">Biblioteca Integrada</span>
@@ -66,13 +66,14 @@
 
 <div class="busca" id="busca" aria-hidden="true" role="dialog" aria-label="Pesquisar">
   <button class="fechar" data-fechar>Fechar pesquisa <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
-  <form action="https://minerva.ufrj.br/F" method="get" target="_blank">
-    <label for="q">Pesquisar no acervo (Base Minerva)</label>
+  <form class="busca-site" action="#" role="search" autocomplete="off">
+    <label for="q">Pesquisar no site</label>
     <div class="campo">
-      <input id="q" name="request" type="search" placeholder="Título, autor ou assunto" autocomplete="off">
-      <input type="hidden" name="func" value="find-b">
+      <input id="q" name="q" type="search" placeholder="Serviços, horários, normas, autores…" autocomplete="off" aria-controls="resultados">
       <button class="enviar" type="submit" aria-label="Buscar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     </div>
+    <div class="resultados" id="resultados" aria-live="polite"></div>
+    <p class="minerva-dica">Procurando um livro? <a id="linkMinerva" href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Pesquise no catálogo da Base Minerva</a></p>
   </form>
 </div>
 
@@ -85,26 +86,26 @@
     <div class="destaque"><p><strong>Atenção:</strong> normalizar não é só formatar. Também envolve a organização e a apresentação das informações.</p></div>
 
     <div class="secao">
-      <h2 class="grande">Margens, fonte e espaçamento</h2>
+      <h2 id="margens-fonte-e-espacamento" class="grande">Margens, fonte e espaçamento</h2>
       <p>Configure o documento antes de começar a escrever. Assim você evita corrigir a formatação depois.</p>
-      <h2>Página</h2>
+      <h2 id="pagina">Página</h2>
       <div class="medidas"><div class="medida"><span>Formato</span><b>A4</b></div><div class="medida"><span>Medidas</span><b>21 x 29,7 cm</b></div></div>
-      <h2>Margens no anverso da folha</h2>
+      <h2 id="margens-no-anverso-da-folha">Margens no anverso da folha</h2>
       <div class="medidas">
         <div class="medida"><span>Superior</span><b>3 cm</b></div>
         <div class="medida"><span>Esquerda</span><b>3 cm</b></div>
         <div class="medida"><span>Inferior</span><b>2 cm</b></div>
         <div class="medida"><span>Direita</span><b>2 cm</b></div>
       </div>
-      <h2>Fonte</h2>
+      <h2 id="fonte">Fonte</h2>
       <p>Tamanho <strong>12</strong> no texto do trabalho. Tamanho <strong>10 ou 11</strong> em citações longas, paginação, legendas de figuras, tabelas e quadros e nas fontes de ilustrações e tabelas.</p>
-      <h2>Espaçamento</h2>
+      <h2 id="espacamento">Espaçamento</h2>
       <p>Entrelinhas de <strong>1,5</strong> no corpo do trabalho. Espaçamento simples em citações longas, notas de rodapé, referências, legendas e fontes de ilustrações e tabelas.</p>
       <p style="font-size:15.5px;color:#5a606a">A série Normalização na Prática continua no nosso <a href="https://www.instagram.com/bibliotecaintegradaufrj/" target="_blank" rel="noopener">Instagram</a>, com paginação, sumário, citações, referências, figuras e tabelas e DOI.</p>
     </div>
 
     <div class="secao" id="oficina">
-      <h2 class="grande">Oficina ABNT Normalização</h2>
+      <h2 id="oficina-abnt-normalizacao" class="grande">Oficina ABNT Normalização</h2>
       <p>A oficina apresenta as normas de apresentação de trabalhos finais de curso, como TCCs, dissertações e teses, para estudantes da EBA, da FAU e do IPPUR.</p>
       <div class="horarios">
         <div class="horario"><b>Segundas-feiras, 13h30 às 15h30</b><span>Remoto, pelo Google Meet</span></div>
@@ -156,6 +157,6 @@
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>try{new window.VLibras.Widget('https://vlibras.gov.br/app');}catch(e){}</script>
 <script>document.documentElement.classList.add("js-ic")</script>
-<script src="js/site.js?v=23"></script>
+<script src="js/site.js?v=24"></script>
 </body>
 </html>

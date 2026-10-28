@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/estilo.css?v=26">
+<link rel="stylesheet" href="css/estilo.css?v=27">
 </head>
 <body id="topo">
 
@@ -37,7 +37,7 @@
 
 <header class="cab">
   <div class="cab-in">
-    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no acervo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
+    <button class="busca-btn" id="abrirBusca" aria-label="Pesquisar no site"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     <a class="marca" href="index.html" aria-label="Biblioteca Integrada, página inicial">
       <img src="logos/ufrj-compacta.png" alt="UFRJ" width="556" height="277">
       <span class="nome">Biblioteca Integrada</span>
@@ -66,13 +66,14 @@
 
 <div class="busca" id="busca" aria-hidden="true" role="dialog" aria-label="Pesquisar">
   <button class="fechar" data-fechar>Fechar pesquisa <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
-  <form action="https://minerva.ufrj.br/F" method="get" target="_blank">
-    <label for="q">Pesquisar no acervo (Base Minerva)</label>
+  <form class="busca-site" action="#" role="search" autocomplete="off">
+    <label for="q">Pesquisar no site</label>
     <div class="campo">
-      <input id="q" name="request" type="search" placeholder="Título, autor ou assunto" autocomplete="off">
-      <input type="hidden" name="func" value="find-b">
+      <input id="q" name="q" type="search" placeholder="Serviços, horários, normas, autores…" autocomplete="off" aria-controls="resultados">
       <button class="enviar" type="submit" aria-label="Buscar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7.2"/><path d="m20.6 20.6-4.9-4.9"/></svg></button>
     </div>
+    <div class="resultados" id="resultados" aria-live="polite"></div>
+    <p class="minerva-dica">Procurando um livro? <a id="linkMinerva" href="https://minerva.ufrj.br/F" target="_blank" rel="noopener">Pesquise no catálogo da Base Minerva</a></p>
   </form>
 </div>
 
@@ -87,7 +88,7 @@
     </nav>
     <div class="serie" id="eba-01">
       <span class="rotulo">EBA | 01</span>
-      <h2>Ivair Reinaldim</h2>
+      <h2 id="ivair-reinaldim">Ivair Reinaldim</h2>
       <p class="bio">Docente permanente e coordenador do Programa de Pós-Graduação em Artes Visuais da EBA. Pesquisa arte contemporânea brasileira, historiografia da arte no Brasil, crítica de arte, história das exposições e práticas curatoriais.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Imagens+insurgentes" target="_blank" rel="noopener">
@@ -102,7 +103,7 @@
     </div>
     <div class="serie" id="eba-02">
       <span class="rotulo">EBA | 02</span>
-      <h2>Marize Malta</h2>
+      <h2 id="marize-malta">Marize Malta</h2>
       <p class="bio">Professora da EBA e pesquisadora do CNPq. Atua em História e Teoria da Arte, com ênfase em cultura visual e material, colecionismo e acervos museológicos.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Dize-me+como+moras%2C+dir-te-ei+quem+%C3%A9s" target="_blank" rel="noopener">
@@ -129,7 +130,7 @@
     </div>
     <div class="serie" id="fau-01">
       <span class="rotulo">FAU | 01</span>
-      <h2>Vera Regina Tângari</h2>
+      <h2 id="vera-regina-tangari">Vera Regina Tângari</h2>
       <p class="bio">Professora Associada da UFRJ, docente do PROARQ e do Programa de Pós-Graduação em Projeto e Patrimônio. Pesquisa paisagismo, morfologia urbana e desenho urbano.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Sistemas+de+espa%C3%A7os+livres" target="_blank" rel="noopener">
@@ -160,7 +161,7 @@
     </div>
     <div class="serie" id="fau-02">
       <span class="rotulo">FAU | 02</span>
-      <h2>Denise Barcellos Pinheiro Machado</h2>
+      <h2 id="denise-barcellos-pinheiro-machado">Denise Barcellos Pinheiro Machado</h2>
       <p class="bio">Professora Titular da FAU/UFRJ e pesquisadora do CNPq, arquiteta e doutora em Urbanismo. Atua com projetos urbanos e estruturação do espaço.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Sobre+urbanismo" target="_blank" rel="noopener">
@@ -175,7 +176,7 @@
     </div>
     <div class="serie" id="ippur-01">
       <span class="rotulo">IPPUR | 01</span>
-      <h2>Fania Fridman</h2>
+      <h2 id="fania-fridman">Fania Fridman</h2>
       <p class="bio">Docente permanente do Programa de Pós-Graduação em Planejamento Urbano e Regional do IPPUR. Pesquisa planejamento urbano e regional e história urbana.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Urbaniza%C3%A7%C3%B5es+brasileiras" target="_blank" rel="noopener">
@@ -202,7 +203,7 @@
     </div>
     <div class="serie" id="ippur-02">
       <span class="rotulo">IPPUR | 02</span>
-      <h2>Adauto Lúcio Cardoso</h2>
+      <h2 id="adauto-lucio-cardoso">Adauto Lúcio Cardoso</h2>
       <p class="bio">Professor titular do IPPUR/UFRJ. Pesquisa planejamento urbano e regional, habitação e políticas locais, sociologia para o planejamento e cidade e meio ambiente.</p>
       <div class="livros">
         <a class="livro" href="https://minerva.ufrj.br/F?func=find-b&amp;request=Urbaniza%C3%A7%C3%A3o+de+favelas+no+Rio+de+Janeiro" target="_blank" rel="noopener">
@@ -258,6 +259,6 @@
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>try{new window.VLibras.Widget('https://vlibras.gov.br/app');}catch(e){}</script>
 <script>document.documentElement.classList.add("js-ic")</script>
-<script src="js/site.js?v=23"></script>
+<script src="js/site.js?v=24"></script>
 </body>
 </html>

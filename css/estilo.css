@@ -404,3 +404,21 @@ html.sem-carga .carga{display:none}
   .faq-resumo .item{padding:26px 0;border-top:1px solid #dde2e9;border-bottom:0}
   .faq-resumo .item:nth-last-child(-n+2){border-bottom:1px solid #dde2e9}
 }
+
+/* ---------- Busca no site ---------- */
+.busca{align-items:flex-start;overflow-y:auto;padding:max(18vh,96px) 22px 40px}
+.busca .busca-site{width:min(720px,100%)}
+.busca .resultados ul{list-style:none;margin:26px 0 0;padding:0;border-top:1px solid rgba(255,255,255,.18)}
+.busca .resultados li{border-bottom:1px solid rgba(255,255,255,.18)}
+.busca .resultados a{display:block;padding:16px 4px;color:#fff;text-decoration:none;transition:background .15s}
+.busca .resultados a:hover,.busca .resultados a:focus-visible{background:rgba(255,255,255,.07);outline:0}
+.busca .resultados small{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#9fb0c9;margin-bottom:5px}
+.busca .resultados b{display:block;font-family:var(--sans);font-weight:600;font-size:18px;line-height:1.3}
+.busca .resultados span{display:block;font-size:15px;line-height:1.5;color:#cfd8e6;margin-top:5px}
+.busca .resultados mark{background:none;color:#fff;font-weight:600;box-shadow:inset 0 -2px 0 rgba(255,255,255,.55)}
+.busca .resultados .vazio,.busca .resultados .mais{color:#cfd8e6;font-size:15.5px;line-height:1.5;margin:22px 0 0}
+.busca .minerva-dica{margin:26px 0 0;color:#9fb0c9;font-size:15px}
+.busca .minerva-dica a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+@media (min-width:768px){.busca{padding-top:max(20vh,120px)}}
+.busca{background:var(--azul)}
+.busca input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
