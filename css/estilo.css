@@ -253,3 +253,38 @@ a{color:var(--azul)}
 .carga.sai{opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s .5s}
 html.sem-carga .carga{display:none}
 @media (prefers-reduced-motion:reduce){.carga *{animation-duration:.01s!important;animation-delay:0s!important}}
+
+/* ---------- Inicial com ícones ---------- */
+.atalhos{padding:64px 16px 30px}
+.atalhos h2{font-family:var(--sans);font-weight:600;font-size:30px;line-height:1.2;text-align:center;margin:0 0 34px}
+.grade-ic{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:700px){.grade-ic{grid-template-columns:repeat(3,1fr);gap:16px}}
+@media (min-width:1000px){.grade-ic{grid-template-columns:repeat(4,1fr)}}
+.atalho{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:24px 18px 22px;background:#fff;border:1px solid #e3e6eb;text-decoration:none;color:var(--texto);overflow:hidden;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease,border-color .45s ease}
+.atalho::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--azul);transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.atalho .ic{width:46px;height:46px;margin-bottom:12px;fill:none;stroke:#1d1f23;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+.atalho b{font-size:16.5px;font-weight:600;line-height:1.25}
+.atalho span{font-size:14px;line-height:1.4;color:#5a606a}
+@keyframes ic-desenha{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.atalho .ic *{stroke-dasharray:1;stroke-dashoffset:0}
+.atalho.visto .ic *{animation:ic-desenha 1.1s cubic-bezier(.6,0,.3,1) both}
+@media (hover:hover){
+  .atalho:hover,.atalho:focus-visible{transform:translateY(-5px);box-shadow:0 14px 30px rgba(18,50,97,.12);border-color:#cfd6e2}
+  .atalho:hover::after,.atalho:focus-visible::after{transform:scaleX(1)}
+  .atalho:hover .ic,.atalho:focus-visible .ic{stroke:var(--azul);transform:scale(1.06)}
+  .atalho:hover .ic *{animation:ic-desenha .9s cubic-bezier(.6,0,.3,1) both}
+}
+.atalho:active{transform:scale(.98)}
+.atalho:active::after{transform:scaleX(1)}
+.inicio .cartao{margin:0}
+.faq-pagina{padding-top:56px}
+@media (prefers-reduced-motion:reduce){.atalho .ic *{animation:none!important}}
+@media (max-width:560px){
+  .atalhos{padding:52px 14px 24px}
+  .atalhos h2{font-size:26px;margin-bottom:26px}
+  .atalho{padding:18px 14px 18px;gap:4px}
+  .atalho .ic{width:40px;height:40px;margin-bottom:8px}
+  .atalho b{font-size:15.5px}
+  .atalho span{font-size:13.5px}
+}

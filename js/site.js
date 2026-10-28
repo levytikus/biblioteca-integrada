@@ -50,3 +50,13 @@
   requestAnimationFrame(function(){c.classList.add('play')});
   setTimeout(function(){c.classList.add('sai');document.documentElement.style.overflow='';setTimeout(function(){c.remove()},600)},3700);
 })();
+
+// Ícones da inicial: traço se desenha ao aparecer na tela
+(function(){
+  var a=document.querySelectorAll('.atalho'); if(!a.length||!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
+    var el=e.target; var i=[].indexOf.call(a,el)%4;
+    el.querySelectorAll('.ic *').forEach(function(p){p.style.animationDelay=(i*0.08)+'s'});
+    el.classList.add('visto'); io.unobserve(el);}})},{threshold:.4});
+  a.forEach(function(el){io.observe(el)});
+})();
