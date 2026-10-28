@@ -393,3 +393,14 @@ html.sem-carga .carga{display:none}
 .livro .sem-capa small{font-family:var(--titulo);font-weight:700;font-size:10.5px;line-height:1.25;text-transform:uppercase;letter-spacing:.02em;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .livro b,.livro i,.livro span:not(.capa-livro),.livro em{grid-column:2}
 @media (min-width:768px){.livro{grid-template-columns:104px 1fr}.livro .capa-livro{width:104px}}
+
+/* ---------- FAQ da inicial: lista com fios, sem o "?" ---------- */
+.faq-resumo .itens{gap:0;border-top:1px solid #dde2e9}
+.faq-resumo .item{display:block;padding:24px 2px;border-bottom:1px solid #dde2e9}
+.faq-resumo .item::before{content:none}
+.faq-resumo h3{margin:0 0 8px}
+@media (min-width:768px){
+  .faq-resumo .itens{gap:0 64px;border-top:0;max-width:840px}
+  .faq-resumo .item{padding:26px 0;border-top:1px solid #dde2e9;border-bottom:0}
+  .faq-resumo .item:nth-last-child(-n+2){border-bottom:1px solid #dde2e9}
+}
