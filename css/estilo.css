@@ -349,3 +349,9 @@ html.sem-carga .carga{display:none}
   .atalhos h2,.passos h2,.faq-resumo h2{font-size:23px}
 }
 @media (max-width:560px){.atalhos{padding-top:72px}.atalhos h2{font-size:20px}}
+
+/* ---------- FAQ mais largo, alinhado à grade dos ícones ---------- */
+.faq-resumo{max-width:none;border-top:0}
+.faq .itens{max-width:980px}
+@media (min-width:768px){.faq .itens{column-gap:64px}}
+@media (max-width:560px){.faq{padding-left:16px;padding-right:16px}}
