@@ -18,18 +18,6 @@
   var capa=document.querySelector('.capa');
   if(capa){
     var foto=capa.querySelector('img'), esc=capa.querySelector('.escuro');
-    var reduz=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var pendente=false;
-    function rolar(){
-      pendente=false;
-      var y=window.scrollY||window.pageYOffset, h=capa.offsetHeight;
-      if(y>h+40) return;
-      if(!reduz) foto.style.transform='translate3d(0,'+Math.round(y*0.92)+'px,0)';
-      esc.style.opacity=Math.min(0.62,(y/h)*0.9).toFixed(3);
-    }
-    window.addEventListener('scroll',function(){if(!pendente){pendente=true;requestAnimationFrame(rolar)}},{passive:true});
-    rolar();
-
     // Tenta a foto oficial da inauguração; se não carregar, fica a provisória
     var oficial=foto.getAttribute('data-oficial');
     if(oficial){

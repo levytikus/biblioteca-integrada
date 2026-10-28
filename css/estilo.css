@@ -288,3 +288,13 @@ html.sem-carga .carga{display:none}
   .atalho b{font-size:15.5px}
   .atalho span{font-size:13.5px}
 }
+
+/* ---------- Capa: foto fixa recortada pela seção (rolagem feita pelo navegador, sem script) ---------- */
+.capa{clip-path:inset(0)}
+.capa img{position:fixed;top:var(--cab);left:0;width:100%;height:calc(100svh - var(--cab));min-height:480px;transform:none!important;will-change:auto}
+.capa .escuro{position:fixed;top:var(--cab);left:0;width:100%;height:calc(100svh - var(--cab));min-height:480px}
+@supports (animation-timeline: scroll()){
+  @keyframes capa-escurece{from{opacity:0}to{opacity:.6}}
+  .capa .escuro{animation:capa-escurece linear both;animation-timeline:scroll(root);animation-range:0 calc(100svh - var(--cab))}
+}
+@media (prefers-reduced-motion:reduce){.capa .escuro{animation:none}}
