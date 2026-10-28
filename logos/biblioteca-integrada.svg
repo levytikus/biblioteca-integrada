@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" role="img" aria-label="Biblioteca Integrada EBA FAU IPPUR">
+<g fill="currentColor" font-family="Montserrat, Arial, sans-serif">
+<text x="0" y="62" font-size="17" font-weight="500" letter-spacing="10.5">BIBLIOTECA</text>
+<text x="0" y="96" font-size="17" font-weight="500" letter-spacing="10.5">INTEGRADA</text>
+<g font-size="21" font-weight="600" letter-spacing="9" text-anchor="middle">
+<text x="335" y="34">EBA</text><text x="335" y="64">FAU</text>
+<text x="334" y="96" letter-spacing="0.5">IPPUR</text></g>
+</g>
+<g fill="none" stroke="currentColor" stroke-width="3">
+<path d="M292 8h-10v104h10"/><path d="M378 8h10v104h-10"/></g>
+</svg>
