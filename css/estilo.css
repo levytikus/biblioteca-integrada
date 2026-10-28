@@ -377,3 +377,10 @@ html.sem-carga .carga{display:none}
 @supports (selector(:has(*))) or (display:grid){
   .js-ic .atalho:not(.visto) .ic *{stroke-dashoffset:1}
 }
+
+/* ---------- Abertura mais delicada no celular ---------- */
+@media (max-width:560px){
+  .carga .cj{width:38vw;max-width:170px}
+  .carga .wm{font-size:9.5px;letter-spacing:.38em;padding-left:.38em;margin-top:12%}
+  .carga .barra{width:62%;height:1.5px;margin-top:11%}
+}
