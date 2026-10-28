@@ -1,9 +1,0 @@
-Salve nesta pasta as logos com exatamente estes nomes:
-
-ufrj-horizontal-negativa.png   (logo da UFRJ branca, versão horizontal)
-ouvidoria.png                  (selo da Ouvidoria UFRJ, branco)
-e-sic.png                      (selo Acesso à Informação, branco)
-logo-bi.jpg                    (logo da Biblioteca Integrada)
-favicon.png                    (Minerva, ícone da aba do navegador)
-
-Enquanto um arquivo não estiver aqui, o site mostra o nome em texto no lugar da logo.
