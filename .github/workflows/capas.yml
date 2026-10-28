@@ -3,8 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       lista:
-        description: "Linhas no formato nome|url (url de PDF termina em .pdf ou leva o prefixo pdf:)"
+        description: "Uma linha por capa: nome|url (PDF: url terminada em .pdf ou com prefixo pdf:)"
         required: true
+permissions:
+  contents: write
 jobs:
   baixar:
     runs-on: ubuntu-latest
@@ -13,9 +15,10 @@ jobs:
         env:
           LISTA: ${{ inputs.lista }}
         run: |
-          sudo apt-get install -y -qq poppler-utils >/dev/null
-          mkdir -p saida
+          sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq poppler-utils >/dev/null || echo "sem poppler"
+          mkdir -p saida && cd saida
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+          : > relatorio.txt
           printf '%s\n' "$LISTA" | while IFS='|' read -r nome url; do
             [ -z "$nome" ] && continue
             case "$url" in
@@ -24,15 +27,22 @@ jobs:
               *) tipo=img;;
             esac
             if [ "$tipo" = pdf ]; then
-              curl -sSL -A "$UA" -m 120 -o "saida/$nome.pdf" "$url" \
-                && pdftoppm -f 1 -l 1 -r 200 -jpeg "saida/$nome.pdf" "saida/$nome" \
-                && rm -f "saida/$nome.pdf" || echo "FALHOU $nome $url"
+              if curl -fsSL -A "$UA" -m 180 -o "$nome.pdf" "$url" && pdftoppm -f 1 -l 1 -r 200 -jpeg "$nome.pdf" "$nome"; then
+                echo "OK $nome" >> relatorio.txt
+              else
+                echo "FALHOU $nome $url" >> relatorio.txt
+              fi
+              rm -f "$nome.pdf"
             else
-              curl -sSL -A "$UA" -m 60 -o "saida/$nome.bin" "$url" || echo "FALHOU $nome $url"
+              code=$(curl -sSL -A "$UA" -m 60 -o "$nome.bin" -w '%{http_code}' "$url" || echo 000)
+              echo "$code $nome $(file -b "$nome.bin" | cut -c1-60)" >> relatorio.txt
             fi
           done
-          ls -la saida
-      - uses: actions/upload-artifact@v4
-        with:
-          name: capas
-          path: saida
+          cat relatorio.txt
+      - name: Guardar no ramo capas-brutas
+        run: |
+          cd saida
+          git init -q -b capas-brutas
+          git -c user.name=capas -c user.email=capas@users.noreply.github.com add -A
+          git -c user.name=capas -c user.email=capas@users.noreply.github.com commit -q -m "capas brutas"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" capas-brutas
