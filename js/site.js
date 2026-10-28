@@ -37,12 +37,19 @@
   setTimeout(function(){c.classList.add('sai');document.documentElement.style.overflow='';setTimeout(function(){c.remove()},600)},3700);
 })();
 
-// Ícones da inicial: traço se desenha ao aparecer na tela
+// Ícones da inicial: o traço se desenha toda vez que o cartão entra na tela
 (function(){
   var a=document.querySelectorAll('.atalho'); if(!a.length||!('IntersectionObserver' in window)) return;
-  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
-    var el=e.target; var i=[].indexOf.call(a,el)%4;
-    el.querySelectorAll('.ic *').forEach(function(p){p.style.animationDelay=(i*0.08)+'s'});
-    el.classList.add('visto'); io.unobserve(el);}})},{threshold:.4});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    var el=e.target;
+    if(e.isIntersecting && e.intersectionRatio>=0.4){
+      if(el.classList.contains('visto')) return;
+      var i=[].indexOf.call(a,el)%4;
+      el.querySelectorAll('.ic *').forEach(function(p){p.style.animationDelay=(i*0.08)+'s'});
+      el.classList.add('visto');
+    } else if(!e.isIntersecting){
+      el.classList.remove('visto');
+    }
+  })},{threshold:[0,0.4]});
   a.forEach(function(el){io.observe(el)});
 })();

@@ -373,3 +373,7 @@ html.sem-carga .carga{display:none}
   .faq-resumo p{font-size:16.5px}
 }
 .faq-resumo .item{align-content:start}
+/* ícone fica apagado enquanto está fora da tela, para redesenhar ao voltar */
+@supports (selector(:has(*))) or (display:grid){
+  .js-ic .atalho:not(.visto) .ic *{stroke-dashoffset:1}
+}
