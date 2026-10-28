@@ -1,0 +1,38 @@
+name: Baixar capas
+on:
+  workflow_dispatch:
+    inputs:
+      lista:
+        description: "Linhas no formato nome|url (url de PDF termina em .pdf ou leva o prefixo pdf:)"
+        required: true
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar
+        env:
+          LISTA: ${{ inputs.lista }}
+        run: |
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p saida
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+          printf '%s\n' "$LISTA" | while IFS='|' read -r nome url; do
+            [ -z "$nome" ] && continue
+            case "$url" in
+              pdf:*) url="${url#pdf:}"; tipo=pdf;;
+              *.pdf|*.PDF) tipo=pdf;;
+              *) tipo=img;;
+            esac
+            if [ "$tipo" = pdf ]; then
+              curl -sSL -A "$UA" -m 120 -o "saida/$nome.pdf" "$url" \
+                && pdftoppm -f 1 -l 1 -r 200 -jpeg "saida/$nome.pdf" "saida/$nome" \
+                && rm -f "saida/$nome.pdf" || echo "FALHOU $nome $url"
+            else
+              curl -sSL -A "$UA" -m 60 -o "saida/$nome.bin" "$url" || echo "FALHOU $nome $url"
+            fi
+          done
+          ls -la saida
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capas
+          path: saida
