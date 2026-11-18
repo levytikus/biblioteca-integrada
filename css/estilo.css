@@ -422,3 +422,12 @@ html.sem-carga .carga{display:none}
 @media (min-width:768px){.busca{padding-top:max(20vh,120px)}}
 .busca{background:var(--azul)}
 .busca input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+
+/* ---------- Galeria do espaço (A Biblioteca) ---------- */
+.galeria-bi{display:grid;gap:18px;margin:12px 0 26px}
+.galeria-bi figure{margin:0;background:#fff;border:1px solid #e3e6eb;display:flex;flex-direction:column}
+.galeria-bi img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.galeria-bi figcaption{padding:16px 18px 18px;font-size:15px;line-height:1.5;color:var(--texto-2)}
+.galeria-bi figcaption b{display:block;font-size:16.5px;font-weight:600;color:var(--texto);margin-bottom:6px}
+@media (min-width:700px){.galeria-bi{grid-template-columns:repeat(3,1fr);gap:14px}.galeria-bi figcaption{font-size:14.5px}}
+@media (min-width:700px){.pagina .in:has(.galeria-bi){max-width:760px}}
