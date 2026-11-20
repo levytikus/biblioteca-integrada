@@ -823,6 +823,7 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
         const prevShort = prev && (pg.w - margins.right * PT_PER_CM) - prev.x1 > PT_PER_CM * 2.5;
         const newPara = !cur || gap > lineH * 2.05 || Math.abs(l.fs - prev.fs) > 0.9 ||
           (startsIndented && prevShort) || (prevShort && /^(\d+(\.\d+)*\s|[a-z]\)\s|[•●\-–]\s)/.test(l.text)) ||
+          (prev && /[:;,]$/.test(prev.text.trim()) && /^([a-z]{1,2}\)\s|[•●\-–]\s)/.test(l.text) && (!/^[ivx]+\)/.test(l.text) || /;$/.test(prev.text.trim()))) ||
           (cur && cur.lines.length === 1 && prevShort && (isHeadingLike(prev.text) || (prev.text.split(/\s+/).length <= 9 && !/[.,;:]$/.test(prev.text) && /^[\p{Lu}\d“"]/u.test(l.text)))) ||
           /^(palavras?[- ]chave|keywords?|key[- ]words|palabras clave|fonte\s*:|fontes\s*:|nota\s*:)/i.test(l.text);
         if (newPara) { flush(); cur = { page: pg.n, lines: [] }; }
@@ -930,7 +931,7 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
       for (let k = from; k < to; k++) { const p = all[k]; if (!p || p.isTableMarker || p.inTable) continue; const t = T(p); if (t.length < 90 && re.test(norm(t))) return k; }
       return -1;
     };
-    const idxSumario = findTitle(/^(SUMARIO|CONTENTS|TABLE OF CONTENTS)$/, 0, Math.max(60, Math.floor(all.length * 0.3)));
+    const idxSumario = findTitle(/^(SUMARIO|CONTENTS|TABLE OF CONTENTS)$/, 0, Math.max(150, Math.floor(all.length * 0.4)));
     // fim do sumario: linhas terminadas em numero de pagina
     let sumEnd = idxSumario;
     const sumEntries = [];
@@ -1618,6 +1619,24 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
       // varios autores separados por ;
       const eBad = cites.filter(c => c.kind === 'par' && /\s(e|&|and)\s\p{Lu}/u.test(c.author) && !/et al/.test(c.author) && !/^[^;,]*\s(of|for|the|de|da|do|das|dos|del|des|für|und)\s[^;,]*\s(e|&|and)\s/iu.test(c.author));
       if (eBad.length) add({ id: 'cit-ponto-virgula', cat: 'citacoes', sec: '4.1.1.2', weight: 'baixa', title: 'Autores dentro dos parênteses separados por ponto e vírgula', status: 'erro', detail: `${eBad.length} chamada(s) entre parênteses ligam autores com "e". Dentro dos parênteses, os autores são separados por ponto e vírgula: (Barbosa; Paula; Oliveira, 2008).`, evidence: eBad.slice(0, 6).map(c => ({ where: loc(model, c.p), text: c.raw })) });
+      // datas do mesmo autor em ordem cronológica: (Silva, 2020a, 2020b)
+      const yk = (y) => { const m = /(\d{4})([a-z]?)/.exec(y || ''); return m ? +m[1] * 100 + (m[2] ? m[2].charCodeAt(0) - 96 : 0) : null; };
+      const dBad = cites.filter(c => (c.years || []).length > 1 && c.years.map(yk).every(v => v != null) && c.years.map(yk).some((v, k, a) => k > 0 && v < a[k - 1]));
+      if (dBad.length) add({ id: 'cit-datas-ordem', cat: 'citacoes', sec: '4.1.1.2 d', weight: 'baixa', title: 'Datas do mesmo autor em ordem cronológica na chamada', status: 'alerta', detail: `${dBad.length} chamada(s) listam datas do mesmo autor fora de ordem. As datas vêm em ordem crescente, separadas por vírgula: (Silva, 2020a, 2020b).`, evidence: dBad.slice(0, 6).map(c => ({ where: loc(model, c.p), text: c.raw })) });
+      // entrada pelo título: primeira palavra (ou artigo/monossílabo + palavra) seguida de [...] (NBR 10520:2023)
+      const MONO = /^(o|a|os|as|um|uma|uns|umas|the|an?|el|la|los|las|le|les|em|de|da|do|das|dos|no|na|nos|nas|por|com|sem|sob|que|se|e|ao|aos|à|às)$/i;
+      const tHeads = refEntries.filter(r => r.titleEntry && !r.personal).map(r => {
+        const head = r.text.split(/[.:]\s/)[0].replace(/[.:]$/, '');
+        const w = head.split(/\s+/).filter(Boolean); const n = w.length > 1 && MONO.test(w[0]) ? 2 : 1;
+        return { r, key: norm(w.slice(0, n).join(' ')), more: w.length > n };
+      }).filter(x => x.key);
+      const tBad = [];
+      if (tHeads.length) for (const c of cites) {
+        const a = c.author.trim(); const hasSup = /\[(\.\.\.|…)\]/.test(a); const bare = norm(a.replace(/\s*(\[(\.\.\.|…)\]|\.\.\.|…)\s*$/, ''));
+        const th = tHeads.find(x => x.key === bare); if (!th) continue;
+        if (th.more && !hasSup) tBad.push({ c, note: /(\.\.\.|…)\s*$/.test(a) ? 'use [...] em vez de reticências soltas' : 'falta [...] após a palavra do título' });
+      }
+      if (tBad.length) add({ id: 'cit-titulo', cat: 'citacoes', sec: '4.1.1.1.2', weight: 'baixa', title: 'Chamada pelo título com supressão [...]', status: 'alerta', detail: `${tBad.length} chamada(s) de obras sem autoria não indicam a supressão do restante do título. Pela ABNT NBR 10520:2023, cita-se a primeira palavra do título (ou o artigo com a palavra seguinte) seguida de [...]: (A flor [...], 1995).`, evidence: tBad.slice(0, 6).map(x => ({ where: loc(model, x.c.p), text: x.c.raw, note: x.note })) });
     }
     // citacoes diretas: aspas, pagina, mais de 3 linhas
     {
