@@ -1219,7 +1219,7 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
       const kwPara = kwIdx >= 0 ? ps[kwIdx] : null;
       let textPs = (kwIdx >= 0 ? ps.slice(0, kwIdx) : ps).filter(p => T(p).length > 0);
       // referencia antes do resumo (Anexo E) e linhas curtas
-      textPs = textPs.filter(p => !((/^[\p{L}'’\-]{2,}(?: [\p{L}'’\-]{2,})*,\s/u.test(T(p)) || /^[\p{Lu}][\p{Lu}'’\- ]{1,80}\.\s/u.test(T(p))) && /\b(19|20)\d{2}\b/.test(T(p)) && /(f\.|p\.|disserta|tese|trabalho de conclus|orientador)/i.test(T(p))));
+      textPs = textPs.filter(p => !((/^[\p{L}'’\-]{2,}(?: [\p{L}'’\-]{2,})*,\s/u.test(T(p)) || /^[\p{Lu}][\p{Lu}'’\- ]{1,80}\.\s/u.test(T(p))) && /\b(19|20)\d{2}\b/.test(T(p)) && /(\bf\.|\bp\.|disserta|tese|monografia|trabalho de conclus|especializa|mestrado|doutorado|gradua[çc][ãa]o|orientador|monograph|thesis|dissertation)/i.test(T(p))));
       textPs = textPs.filter(p => words(T(p)) > 12 && !(reNatureza.test(T(p)) && reObjetivo.test(T(p)) && words(T(p)) < 70));
       const merged = [];
       for (const p of textPs) { const prev = merged[merged.length - 1]; if (prev && !/[.!?]["”)]?\s*$/.test(T(prev[prev.length - 1]))) prev.push(p); else merged.push([p]); }
