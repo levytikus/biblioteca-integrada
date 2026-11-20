@@ -220,9 +220,34 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
   .rod .base { font-size: 13.5px; margin-top: 80px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* página inicial enxuta: o essencial à vista, o resto em dobras */
+.abre { padding: 48px 0 0; }
+.abre .marca-bi { width: 72px; margin-bottom: 20px; }
+.abre .lede { font-size: 17px; max-width: 520px; }
+.start { display: block; max-width: 640px; margin: 0 auto; padding: 30px 20px 8px; box-sizing: border-box; }
+.drop { padding: 46px 24px 40px; }
+.start-nota { text-align: center; font-size: 14px; color: var(--muted); margin: 16px 0 0; line-height: 1.6; }
+.botao-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--azul); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.mais { max-width: 800px; margin: 0 auto; padding: 34px 20px 70px; box-sizing: border-box; display: grid; gap: 0; }
+.abre { padding-left: 20px; padding-right: 20px; }
+.dobra { border-top: 1px solid var(--linha); }
+.dobra:last-child { border-bottom: 1px solid var(--linha); }
+.dobra summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 16px 4px; font: 500 16px/1.4 var(--sans); color: var(--texto); }
+.dobra summary::-webkit-details-marker { display: none; }
+.dobra summary::after { content: ""; width: 9px; height: 9px; border-right: 1.8px solid var(--azul); border-bottom: 1.8px solid var(--azul); transform: rotate(45deg); transition: transform .2s; margin-right: 6px; }
+.dobra[open] summary::after { transform: rotate(-135deg); }
+.dobra summary:hover { color: var(--azul); }
+.dobra summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.dobra-corpo { padding: 2px 4px 24px; }
+.dobra-intro, .base-txt p { color: var(--texto-2); font-size: 15px; line-height: 1.6; margin: 0 0 18px; }
+.base-txt p:last-child { margin-bottom: 0; }
+.dobra .notes { margin: 0; }
+.dobra .sheet-fig svg { max-width: 380px; }
+body.na-inicio #avisoBase { display: none; }
 </style>
 </head>
-<body id="topo">
+<body id="topo" class="na-inicio">
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
 <header class="cab">
@@ -242,42 +267,62 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
       <img class="marca-bi" src="data:image/png;base64,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" alt="Biblioteca Integrada: EBA, FAU, IPPUR" width="211" height="220">
       <p class="sobre">SIBI Analisador</p>
       <h1>Seu trabalho está dentro das normas do SiBI?</h1>
-      <p class="lede">Envie a monografia, o TCC, a dissertação ou a tese. O SIBI Analisador confere formato, margens, fonte, espaçamento, estrutura, títulos, ilustrações, citações e referências e devolve o percentual de conformidade, o que já está certo e cada ajuste necessário, com a seção do manual que o fundamenta.</p>
+      <p class="lede">Envie o arquivo e veja o percentual de conformidade com o manual e o que ajustar.</p>
     </section>
     <section class="start wrap">
-      <div>
-        <label class="drop" id="drop" for="file">
+      <label class="drop" id="drop" for="file">
           <input type="file" id="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--azul)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5Z"/><path d="M14 3v4.5h4.5"/><path d="M12 17.5v-6m0 0-2.5 2.5M12 11.5l2.5 2.5"/></svg>
           <span class="big">Arraste o arquivo aqui ou clique para escolher</span>
-          <span class="small">Até 60 MB</span>
-          <span class="types"><span class="tag">Word (.docx)</span><span class="tag">PDF</span></span>
+          <span class="small">Word (.docx) ou PDF</span>
         </label>
-        <div class="busy" id="busy"><span class="barra"><i></i></span><span id="busyText">Lendo o documento…</span></div>
+      <div class="busy" id="busy"><span class="barra"><i></i></span><span id="busyText">Lendo o documento…</span></div>
         <div class="err-box" id="err" role="alert"></div>
-        <ul class="notes">
-          <li><b>Seu arquivo fica com você.</b> A leitura acontece aqui mesmo, no navegador, sem envio para servidores.</li>
-          <li><b>Prefira o Word.</b> Ele registra estilos, alinhamentos, recuos e destaques que o PDF não guarda. No PDF, margens e espaçamentos são medidos pela posição do texto.</li>
-        </ul>
-        <div class="start-actions"><button class="botao texto" id="demo" type="button">Ver o relatório de uma dissertação de exemplo</button></div>
-      </div>
-      <figure class="sheet-fig">
+      <p class="start-nota">O arquivo é lido no seu navegador e não sai do seu computador. <button class="botao-link" id="demo" type="button">Ver um relatório de exemplo</button></p>
+    </section>
+
+    <section class="mais wrap" aria-label="Mais informações">
+      <details class="dobra">
+        <summary>O que é verificado</summary>
+        <div class="dobra-corpo">
+          <p class="dobra-intro">Formato, margens, fonte, espaçamento, estrutura, títulos, ilustrações, citações e referências. Cada verificação aponta a seção do manual correspondente, e o percentual pondera os itens pelo peso na entrega: margens, estrutura obrigatória e correspondência entre citações e referências pesam mais que detalhes de pontuação.</p>
+          <div class="scope-grid" id="scopeGrid"></div>
+        </div>
+      </details>
+      <details class="dobra">
+        <summary>Medidas da folha A4</summary>
+        <div class="dobra-corpo">
+          <figure class="sheet-fig">
         <svg id="heroSheet" viewBox="-44 -26 340 352" role="img" aria-label="Folha A4 com as medidas exigidas pelo manual: margens superior e esquerda de 3 cm, direita e inferior de 2 cm, número da página no canto superior direito, citação longa com recuo de 4 cm."></svg>
         <figcaption>Folha A4 do anverso em escala, com as medidas que o manual exige (seções 2.2 a 2.7 e 4.1.1.2).</figcaption>
       </figure>
+        </div>
+      </details>
+      <details class="dobra">
+        <summary>Formatos aceitos e privacidade</summary>
+        <div class="dobra-corpo">
+          <ul class="notes">
+            <li><b>Word (.docx) ou PDF, até 60 MB.</b> Serve para monografia, TCC, dissertação ou tese.</li>
+            <li><b>Prefira o Word.</b> Ele registra estilos, alinhamentos, recuos e destaques que o PDF não guarda. No PDF, margens e espaçamentos são medidos pela posição do texto.</li>
+            <li><b>Seu arquivo fica com você.</b> A leitura acontece aqui mesmo, no navegador, sem envio para servidores.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="dobra">
+        <summary>Base normativa e limites da análise</summary>
+        <div class="dobra-corpo base-txt">
+          <p>Universidade Federal do Rio de Janeiro, Sistema de Bibliotecas e Informação. Manual para elaboração e normalização de trabalhos acadêmicos. 9. ed. Rio de Janeiro: UFRJ/SiBI, 2025. O manual segue as normas ABNT NBR 14724, NBR 10520:2023 e NBR 6023.</p>
+          <p>A análise é automática e orientativa. O manual admite flexibilidade conforme a área e as decisões de cada programa; para a validação final, procure a Biblioteca Integrada ou a biblioteca do seu curso.</p>
+        </div>
+      </details>
     </section>
 
-    <section class="scope wrap" aria-labelledby="scopeH">
-      <h2 id="scopeH">O que é verificado</h2>
-      <p>Cada verificação aponta a seção do manual correspondente. O percentual pondera os itens pelo peso na entrega: margens, estrutura obrigatória e correspondência entre citações e referências pesam mais que detalhes de pontuação.</p>
-      <div class="scope-grid" id="scopeGrid"></div>
-    </section>
   </div>
 
   <section class="report wrap" id="report" aria-live="polite"></section>
 </main>
 
-<div class="aviso-base">
+<div class="aviso-base" id="avisoBase">
   <div class="wrap">
     <p>Base normativa: Universidade Federal do Rio de Janeiro, Sistema de Bibliotecas e Informação. Manual para elaboração e normalização de trabalhos acadêmicos. 9. ed. Rio de Janeiro: UFRJ/SiBI, 2025. O manual segue as normas ABNT NBR 14724, NBR 10520:2023 e NBR 6023.</p>
     <p>A análise é automática e orientativa. O manual admite flexibilidade conforme a área e as decisões de cada programa; para a validação final, procure a Biblioteca Integrada ou a biblioteca do seu curso.</p>
@@ -2078,7 +2123,7 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
     handleFile(new File([u8], 'Dissertação de exemplo (com erros).docx'), true);
   });
   $('#home').addEventListener('click', (e) => { e.preventDefault(); goStart(); });
-  function goStart() { $('#report').classList.remove('show'); $('#startView').classList.remove('hide'); fileInput.value = ''; window.scrollTo(0, 0); }
+  function goStart() { $('#report').classList.remove('show'); $('#startView').classList.remove('hide'); document.body.classList.add('na-inicio'); fileInput.value = ''; window.scrollTo(0, 0); }
 
   /* ---------- relatório ---------- */
   const SEV = { erro: 'Inconformidade', alerta: 'Atenção', ok: 'Em conformidade', na: 'Não verificado' };
@@ -2155,7 +2200,7 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
       </div>
       <div id="list"></div>`;
     renderList();
-    $('#startView').classList.add('hide'); $('#report').classList.add('show');
+    $('#startView').classList.add('hide'); $('#report').classList.add('show'); document.body.classList.remove('na-inicio');
     $('#again').addEventListener('click', goStart);
     $('#dlPdf').addEventListener('click', downloadPdf);
     document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.t; document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b)); renderList(); }));
