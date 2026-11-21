@@ -1710,7 +1710,10 @@ body.na-inicio #avisoBase { display: none; }
       const caps = [];
       const scan = body.concat(post);
       // legendas longas (até 700 caracteres) só contam com separador depois do número
-      for (const p of scan) { const t = T(p); if (t.length > 700) continue; const m = capRe.exec(t); if (!m) continue; if (t.length > 300 && !m[3]) continue; if (!m[4] || m[4].length < 2) continue; caps.push({ p, t, type: m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(), n: +m[2], dotted: m[2].includes('.'), sep: m[3] || '' }); }
+      for (const p of scan) { const t = T(p);
+        // no PDF a legenda às vezes vem colada ao fim do parágrafo anterior: procura linha interna que começa com "Tabela 22 – ..."
+        if (model.kind === 'pdf' && p.lines && p.lines.length > 1 && !capRe.test(t)) { for (const l of p.lines.slice(1)) { const lt = (l.text || '').trim(); const lm = capRe.exec(lt); if (lm && lm[3] && /[–—\-:.]/.test(lm[3]) && lm[4] && lm[4].length >= 2 && lt.length < 200) { caps.push({ p, t: lt, type: lm[1][0].toUpperCase() + lm[1].slice(1).toLowerCase(), n: +lm[2], dotted: lm[2].includes('.'), sep: lm[3] || '' }); break; } } continue; }
+        if (t.length > 700) continue; const m = capRe.exec(t); if (!m) continue; if (t.length > 300 && !m[3]) continue; if (!m[4] || m[4].length < 2) continue; caps.push({ p, t, type: m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(), n: +m[2], dotted: m[2].includes('.'), sep: m[3] || '' }); }
       if (caps.length) {
         const sepBad = caps.filter(c => !/[–—]/.test(c.sep));
         const seqBad = []; const byType = {};
@@ -1773,6 +1776,10 @@ body.na-inicio #avisoBase { display: none; }
           if (capsRuns.some(([x, y]) => m.index >= x && m.index < y)) continue;
           if (seen.has(s)) continue;
           const tail = t.slice(m.index + m[0].length, m.index + m[0].length + 12), head = t.slice(Math.max(0, m.index - 140), m.index);
+          // "“TMMMF” é a temperatura média...": a sigla é explicada logo em seguida
+          if (/^[”"]?\s(?:é|são|significa|refere-se|corresponde|representa|indica)\s(?:a|o|as|os|à|ao)?\s?[\p{Ll}]/u.test(tail + t.slice(m.index + m[0].length + 12, m.index + m[0].length + 40))) { seen.set(s, true); continue; }
+          // "(Topographic Position Index – TPI)": forma completa e sigla juntas no mesmo parêntese = sigla definida
+          if (/\([^()]{3,140}\s[–—-]\s?$/.test(head) && /^\s?\)/.test(tail)) { seen.set(s, true); continue; }
           if (/^[-–]\s?[A-Z\d]/.test(tail) || /[-–]\s?$/.test(head.slice(-2))) continue; // SARS-CoV, EM- DAT
           if (/^[,;]\s*(c?\d{4}|[\p{Lu}][\p{Ll}])/u.test(tail) || /^\s?\(\s?(c?\d{4}|\[s)/.test(tail) || /^\s?et al/.test(tail)) continue; // chamada ou referência
           if (/[(;]\s?$/.test(head) && /^\s?,\s?\d/.test(tail)) continue;
@@ -2208,7 +2215,9 @@ body.na-inicio #avisoBase { display: none; }
           // espaço grande também aparece dentro de uma referência (símbolos e índices deslocam a linha): só separa se a linha nova tem cara de início
           const looksStart = /^[\p{Lu}\[(]/u.test(L.t) && !notStart.test(L.t) && (startRe.test(L.t) || complete(cur.text));
           const dangling = /(?:\b(?:e|de|da|do|dos|das|em|and|of|the|in|para|com)|[-–,;&])\s*$/i.test(cur.text) && !(g != null && g > 2.0);
-          const brk = looksStart && !dangling && ((g != null && g > 2.0) || (pageChange && startRe.test(L.t)) || (g != null && g > 1.45 && complete(cur.text)));
+          // sem a linha em branco, mas com "SOBRENOME, X." logo depois de uma referência fechada (ano e ponto final): também separa
+          const tightBrk = /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(L.t) && complete(cur.text) && hasYear(cur.text) && /\.\s*$/.test(cur.text);
+          const brk = looksStart && !dangling && (tightBrk || (g != null && g > 2.0) || (pageChange && startRe.test(L.t)) || (g != null && g > 1.45 && complete(cur.text)));
           if (brk) { items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; } else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); }
           continue;
         }
