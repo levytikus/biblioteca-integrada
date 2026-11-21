@@ -897,6 +897,8 @@ body.na-inicio #avisoBase { display: none; }
     for (const pg of pages) {
       for (const [x, pos] of [[pg.lines[0], 'top'], [pg.lines[pg.lines.length - 1], 'bottom']]) {
         if (!x || /^\d{1,4}$/.test(x.text)) continue;
+        // fonte e legenda de tabela no pé da página se repetem, mas são conteúdo, não rodapé corrido
+        if (/^(fonte|fontes|legenda|nota|notas|elabora)/i.test(x.text.trim()) && !(pos === 'bottom' && x.y > pg.h - PT_PER_CM * 1.2)) continue;
         const k = keyOf(x.text);
         // cabeçalho de LaTeX: "2.2. TÍTULO DA SEÇÃO    35", bem separado da linha seguinte
         const nxt = pos === 'top' ? pg.lines[1] : pg.lines[pg.lines.length - 2];
@@ -1094,6 +1096,7 @@ body.na-inicio #avisoBase { display: none; }
         const hasNumEnd = ls.some(t => /(\.{3,}|…|\s|-)\s*(p\.\s*)?\d{1,4}\s*$/.test(t));
         const numEndIn = (q) => q && (q.lines || []).some(t => /(\.{3,}|…|\s|-)\s*(p\.\s*)?\d{1,4}\s*$/.test(t.text));
         if (p.page > startPage + 6 || (p.pageBreakBefore && p.page > startPage && !hasNumEnd && !numEndIn(all[k + 1]))) break;
+        if (k > idxSumario + 1 && T(p).length < 60 && /^(LISTA DE|LISTA DAS|RESUMO|ABSTRACT|AGRADECIMENTO|DEDICATORIA|EPIGRAFE|ERRATA)/.test(norm(T(p)))) break; // outro pré-textual depois do sumário
         for (const t of ls) if (!/^\s*([ivxlc]{1,6}|\d{1,4})\s*$/i.test(t) && !/^\s*(contents|sum[áa]rio)\s+[ivxlc\d]+\s*$/i.test(t) && !/^\s*[ivxlc\d]+\s+(contents|sum[áa]rio)\s*$/i.test(t)) buf.push({ t, p });
         sumEnd = k;
       }
@@ -1101,7 +1104,7 @@ body.na-inicio #avisoBase { display: none; }
       let big = '', marks = [];
       for (const b of buf) { marks.push({ at: big.length, p: b.p }); big += b.t + ' '; }
       const LEAD = '(?:(?:\\.\\s?){2,}|…+|_{2,}|[-–—]{2,}|\\s-\\s*p\\.|\\s-)';
-      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:\\.\\s?){3,}\\s*(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))', 'gu');
+      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:\\.\\s?){3,}\\s*(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
       const cuts = [0]; let mm;
       while ((mm = reCut.exec(big))) cuts.push(mm.index + mm[0].length);
       cuts.push(big.length);
@@ -1138,7 +1141,7 @@ body.na-inicio #avisoBase { display: none; }
     if (refCands.length) { const exact = refCands.filter(k => /^(\d+ ?)?(REFERENCIAS|REFERENCES)$/.test(norm(T(all[k])))); idxRefs = exact.length ? exact[0] : refCands[0]; }
     let idxPost = all.length;
     if (idxRefs >= 0) {
-      for (let k = idxRefs + 1; k < all.length; k++) { const t = T(all[k]); if (t.length < 200 && /^(APENDICES?|ANEXOS?|GLOSSARIO|INDICE)( [A-Z]{1,2}| \d{1,2})?( |$)/.test(norm(t)) && (!/^(APENDICE|ANEXO)[S]? .{0,3}\d/.test(norm(t)) || all[k].pageBreakBefore) && (isUpperText(t.split(/[–—-]/)[0]) || all[k].bold || all[k].align === 'center' || all[k].pageBreakBefore)) { idxPost = k; break; } }
+      for (let k = idxRefs + 1; k < all.length; k++) { const t = T(all[k]); if (t.length < 200 && /^(\d{1,2} )?(APENDICES?|ANEXOS?|GLOSSARIO|INDICE)( [A-Z]{1,2}| \d{1,2})?( |$)/.test(norm(t)) && (!/^(APENDICE|ANEXO)[S]? .{0,3}\d/.test(norm(t)) || all[k].pageBreakBefore) && (isUpperText(t.split(/[–—-]/)[0]) || all[k].bold || all[k].align === 'center' || all[k].pageBreakBefore)) { idxPost = k; break; } }
     }
     const preEnd = bodyStart >= 0 ? bodyStart : (sumEnd >= 0 ? sumEnd + 1 : Math.min(all.length, 40));
     const bodyEnd = idxRefs >= 0 ? idxRefs : idxPost;
@@ -1317,9 +1320,10 @@ body.na-inicio #avisoBase { display: none; }
     const reObjetivo = /(requisito|obten[çc][ãa]o (do|de) (t[ií]tulo|grau)|grau de|t[ií]tulo de)/i;
     const reOrient = /orientador(a)?|orienta[çc][ãa]o/i;
     {
-      const hasNat = reNatureza.test(preText) && reObjetivo.test(preText);
+      const natOk = reNatureza.test(preText), objOk = reObjetivo.test(preText);
+      const hasNat = natOk && objOk;
       const hasOri = reOrient.test(preText);
-      const miss = []; if (!hasNat) miss.push('natureza do trabalho e objetivo (ex.: "Dissertação de Mestrado apresentada ao Programa..., como requisito parcial à obtenção do título de Mestre")'); if (!hasOri) miss.push('nome do orientador');
+      const miss = []; if (!natOk && !objOk) miss.push('natureza do trabalho e objetivo (ex.: "Dissertação de Mestrado apresentada ao Programa..., como requisito parcial à obtenção do título de Mestre")'); else if (!objOk) miss.push('o objetivo do trabalho na nota da folha de rosto: a natureza aparece (dissertação, tese...), mas falta a finalidade, como "requisito parcial à obtenção do título de Mestre em..."'); else if (!natOk) miss.push('a natureza do trabalho (dissertação, tese, trabalho de conclusão de curso)'); if (!hasOri) miss.push('nome do orientador');
       add({ id: 'est-rosto', cat: 'estrutura', sec: '3.1.2.1.1', weight: 'alta', title: 'Folha de rosto com natureza, objetivo e orientador', status: miss.length ? 'erro' : 'ok', detail: miss.length ? 'Não encontrado nos pré-textuais: ' + miss.join('; ') + '.' : 'A folha de rosto traz natureza, objetivo, instituição e orientador.', fix: 'Siga o modelo do Anexo B do manual.' });
       // alinhamento da natureza (meio da mancha para a direita)
       const natP = pre.find(p => reNatureza.test(T(p)) && reObjetivo.test(T(p)) && T(p).length > 60);
@@ -1579,7 +1583,7 @@ body.na-inicio #avisoBase { display: none; }
         let cands = bodyHeads.filter(b => b.key === se.num); const pref = cands.filter(b => !!b.h.chapterWord === !!se.chapter); if (pref.length) cands = pref; if (!cands.length) continue;
         compared++;
         const tk = titleKey(se.title);
-        const same = (x, y) => x === y || (Math.min(x.length, y.length) >= 25 && (x.startsWith(y) || y.startsWith(x)));
+        const same = (x, y) => x === y || x.replace(/\s+/g, '') === y.replace(/\s+/g, '') || (Math.min(x.length, y.length) >= 25 && (x.startsWith(y) || y.startsWith(x))); // espaços perdidos na extração do PDF não contam
         if (cands.some(b => same(b.title, tk))) {
           const exact = cands.find(b => same(b.title, tk));
           const rawSum = se.title.replace(/\s+/g, ''), rawBody = exact.h.title.replace(/\s+/g, '');
@@ -1640,7 +1644,8 @@ body.na-inicio #avisoBase { display: none; }
           const start = idxOf(c.p); const nextCap = caps[k + 1] ? idxOf(caps[k + 1].p) : all.length;
           let found = false;
           let seen = 0;
-          for (let j = start + 1; j < Math.min(nextCap, all.length) && seen < 40; j++) { if (!all[j].inTable) seen++; if (j > start + 1 && all[j].outline != null && !all[j].inTable) break; const t = T(all[j]); if (/^(fonte|fontes)\s*:/i.test(t) || /\b(fonte|fontes)\s*:/i.test(t.slice(0, 40))) { found = true; break; } if (/^(adaptad[oa]s?|extra[ií]d[oa]s?|retirad[oa]s?|reproduzid[oa]s?|modificad[oa]s?)\s+(de|da|do|a partir)\b/i.test(t)) { semRotulo.push({ c, t }); found = true; break; } }
+          const pg0 = c.p.page || 0;
+          for (let j = start + 1; j < Math.min(nextCap, all.length) && (model.kind === 'pdf' ? (all[j].page || 0) <= pg0 + 2 : seen < 40); j++) { if (!all[j].inTable) seen++; if (j > start + 1 && all[j].outline != null && !all[j].inTable && (model.kind !== 'pdf' || /^\d+(\.\d+)*\.?\s+\p{Lu}{3}/u.test(T(all[j])))) break; const t = T(all[j]); if (/^(fonte|fontes)\s*:/i.test(t) || /\b(fonte|fontes)\s*:/i.test(t.slice(0, 40))) { found = true; break; } if (/^(adaptad[oa]s?|extra[ií]d[oa]s?|retirad[oa]s?|reproduzid[oa]s?|modificad[oa]s?)\s+(de|da|do|a partir)\b/i.test(t)) { semRotulo.push({ c, t }); found = true; break; } }
           if (!found && /\b(fonte|fontes)\s*:/i.test(c.t)) found = true;
           if (!found) noFonte.push(c);
         });
@@ -1753,7 +1758,10 @@ body.na-inicio #avisoBase { display: none; }
     }
     // numericas
     let numericCount = 0;
-    for (const p of citeIn) { numericCount += (p.superDigits || 0); const t = T(p); numericCount += (t.match(/["”]\s?\(\d{1,3}(?:,\s*p\.\s*[\d\-]+)?\)/g) || []).length + (t.match(/\[\d{1,3}(?:[,–-]\s?\d{1,3})*\]/g) || []).length; }
+    const refsNumeradas = (() => { const ps = refParas.map(T).filter(t => t.length > 25); const n = ps.filter(t => /^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s/.test(t)).length; return ps.length >= 3 && n >= ps.length * 0.5; })();
+    for (const p of citeIn) { numericCount += (p.superDigits || 0); const t = T(p); numericCount += (t.match(/["”]\s?\(\d{1,3}(?:,\s*p\.\s*[\d\-]+)?\)/g) || []).length + (t.match(/\[\d{1,3}(?:[,–-]\s?\d{1,3})*\]/g) || []).length;
+      // (19), (2,3,4), (1-3): só valem como chamada numérica quando a lista de referências é numerada
+      if (refsNumeradas) numericCount += (t.match(/(?<!(?:Figura|Tabela|Quadro|Gráfico|n\s?=|p\.)\s?)\((\d{1,3})(?:\s?[,;–-]\s?\d{1,3})*\)/gi) || []).filter(x => !/\b(1[5-9]|20)\d{2}\b/.test(x)).length; }
     // sistema de chamada
     {
       const ad = cites.length;
@@ -1927,7 +1935,7 @@ body.na-inicio #avisoBase { display: none; }
       // ordem alfabetica
       if (numericCount < 3) {
         const out = [];
-        const ek = (r) => strip(r.text.replace(/^\[\d+\]\s*/, '').replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '').split(/[,.(:]/)[0]).toUpperCase().replace(/[^A-Z ]/g, '').trim();
+        const ek = (r) => strip(r.text.replace(/^(\[\d+\]|\(\d+\)|\d{1,3}\.)\s*/, '').replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '').split(/[,.(:]/)[0]).toUpperCase().replace(/[^A-Z ]/g, '').trim();
         const gt = (x, y) => x && y && x !== y && x.localeCompare(y, 'pt', { sensitivity: 'base' }) > 0;
         for (let k = 1; k < R.length; k++) {
           if (R[k].dashRepeat || R[k - 1].dashRepeat) continue; const a = ek(R[k - 1]), b = ek(R[k]);
@@ -2003,7 +2011,7 @@ body.na-inicio #avisoBase { display: none; }
           detail: main === 'sem destaque' ? 'A maioria das referências não destaca o título. O título deve receber destaque (negrito, itálico ou grifo), igual em todas as referências.' : off.length ? `O padrão do trabalho é ${main}, mas ${off.length} referência(s) usam ${[...new Set(off.map(x => x.k))].join(', ')}.` : `Todas as referências destacam o título em ${main}.`,
           evidence: off.slice(0, 8).map(x => ({ where: loc(model, x.r.p), text: clip(x.r.text, 100), note: x.k })), fix: 'Quando a entrada é pelo título, a primeira palavra fica em maiúsculas e não há destaque.' });
       } else {
-        const spaced = R.filter(r => r.p.lineRatio && r.p.lineRatio > 1.3 && r.p.lines && r.p.lines.length > 1);
+        const spaced = R.filter(r => r.lr != null ? r.lr > 1.3 : (r.p.lineRatio && r.p.lineRatio > 1.3 && r.p.lines && r.p.lines.length > 1));
         if (spaced.length) add({ id: 'ref-espaco', cat: 'referencias', sec: '2.4 / 4.2', weight: 'media', title: 'Referências em espaço simples', status: spaced.length / R.length > 0.3 ? 'erro' : 'alerta', detail: `${spaced.length} referência(s) parecem ter espaçamento maior que simples.`, approx: true });
       }
     } else if (idxRefs >= 0) {
@@ -2058,26 +2066,32 @@ body.na-inicio #avisoBase { display: none; }
     if (model.kind === 'pdf') {
       // linhas corridas da lista; nova referência só quando a anterior está completa
       const lines = [];
-      for (const p of paras) (p.lines || [{ text: T(p) }]).forEach((l, i) => lines.push({ p, t: l.text, first: i === 0, x0: l.x0 }));
-      const startRe = /^(\[\d{1,4}\]\s|[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}'’\-]{2,}(?:[\s\-]+(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E))*[.:]\s|[_\-–—]{3,}|[\p{Lu}][\p{Ll}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{Ll}]+))*,\s[\p{Lu}]|[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|of|the|[\p{Lu}][\p{L}'’\-]+)){0,5}\.\s[\p{Lu}])/u;
+      for (const p of paras) (p.lines || [{ text: T(p) }]).forEach((l, i) => lines.push({ p, t: l.text, first: i === 0, x0: l.x0, y: l.y, fs: l.fs, pg: p.page }));
+      const startRe = /^(\[\d{1,4}\]\s|\(\d{1,4}\)\s|\d{1,3}\.\s(?=[\p{Lu}])|[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}'’\-]{2,}(?:[\s\-]+(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E))*[.:]\s|[_\-–—]{3,}|[\p{Lu}][\p{Ll}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{Ll}]+))*,\s[\p{Lu}]|[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|of|the|[\p{Lu}][\p{L}'’\-]+)){0,5}\.\s[\p{Lu}])/u;
       const hasYear = (t) => /(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)|\[s\.\s?d\.\]|no prelo/i.test(t);
       const complete = (t) => !/\b(In|in|Separata de|Resenha de):?\s*$/.test(t) && ((/[.)\]]\s*$/.test(t) && (hasYear(t) || t.length > 140)) || (/;\s*$/.test(t) && hasYear(t) && t.length > 60));
       const capsStyle = lines.filter(L => L.first && /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*[,.]\s/u.test(L.t)).length >= lines.filter(L => L.first).length * 0.4;
       const notStart = /^(DOI|ISBN|ISSN|URL|HTTPS?|WWW|DISPON[IÍ]VEL|ACESSO|IN)\b/i;
       const mixedStart = /^[\p{Lu}][\p{Ll}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{Ll}]+))*,\s[\p{Lu}]|^[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|of|the|[\p{Lu}][\p{L}'’\-]+)){0,5}\.\s[\p{Lu}]/u;
+      // lista numerada [1], (1), 1.: só o número abre uma referência nova
+      const numStart = /^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s/;
+      const numerada = lines.filter(L => L.first && L.t.length > 20).length >= 3 && lines.filter(L => numStart.test(L.t)).length >= lines.filter(L => L.first && L.t.length > 20).length * 0.5;
       let cur = null;
       for (const L of lines) {
+        if (numerada) { if (!cur || numStart.test(L.t)) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; } else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); } continue; }
         const isStart = startRe.test(L.t) && !notStart.test(L.t) && !(capsStyle && mixedStart.test(L.t) && !/^[\p{Lu}'’\-]{2,}[,.\s]/u.test(L.t));
         const newItem = !cur || (isStart && !/^[_\-–—\s.]+$/.test(cur.text) && (complete(cur.text) || (L.first && !/[;:,]\s*$|\bIn:?\s*$/.test(cur.text))));
-        if (newItem) { if (cur) items.push(cur); cur = { p: L.p, text: L.t }; }
-        else cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2');
+        if (newItem) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; }
+        else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); }
       }
       if (cur) items.push(cur);
+      // entrelinha de cada referência pelas suas próprias linhas (o parágrafo do PDF pode juntar várias)
+      for (const it of items) { const ls = (it.ls || []).filter(l => l.y != null && l.fs); const g = []; for (let k = 1; k < ls.length; k++) if (ls[k].pg === ls[k - 1].pg) g.push((ls[k].y - ls[k - 1].y) / ls[k].fs / 1.15); g.sort((a, b) => a - b); it.lr = g.length ? g[Math.floor(g.length / 2)] : null; delete it.ls; }
     } else items = paras.map(p => ({ p, text: T(p) }));
     items = items.filter(x => x.text.length > 15 && /[A-Za-z]/.test(x.text) && !/^(AP[ÊE]NDICE|ANEXO)\b/i.test(x.text) && !(x.text.length < 70 && !/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/.test(x.text) && /^(refer[êe]ncias|bibliografia|fontes|documentos|filmografia|obras|sites|outras|leis|legisla)/i.test(x.text)));
     let prev = null;
-    return items.map(({ p, text }) => {
-      const head = text.slice(0, 220).replace(/^\[\d{1,4}\]\s*/, '');
+    return items.map(({ p, text, lr }) => {
+      const head = text.slice(0, 220).replace(/^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s*/, '');
       if (/^[_\-–—]{3,}/.test(head) && prev) { const r = Object.assign({}, prev, { p, text, dashRepeat: true, entryOk: true, years: [...new Set(text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || [])] }); prev = r; return r; }
       const personal = /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(head);
       const entity = /^[\p{Lu}'’\-]{2,}(?:[\s\-]+(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E))*\.\s/u.test(head);
@@ -2095,7 +2109,7 @@ body.na-inicio #avisoBase { display: none; }
       const years = [...new Set((text.replace(/acesso em\s*:?[^.]*\.[^.]*\.?\s*\d{4}/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
       if (!years.length) { const y2 = text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g); if (y2) years.push(...y2); }
       const sortKey = strip(text.replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '')).toUpperCase().replace(/[^A-Z0-9 ,]/g, '');
-      const r = { p, text, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
+      const r = { p, text, lr, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
     });
   }
 
