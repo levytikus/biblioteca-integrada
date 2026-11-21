@@ -1104,7 +1104,7 @@ body.na-inicio #avisoBase { display: none; }
       let big = '', marks = [];
       for (const b of buf) { marks.push({ at: big.length, p: b.p }); big += b.t + ' '; }
       const LEAD = '(?:(?:\\.\\s?){2,}|…+|_{2,}|[-–—]{2,}|\\s-\\s*p\\.|\\s-)';
-      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:\\.\\s?){3,}\\s*(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
+      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:(?:\\.\\s?){3,}|[-–—]{3,})\\s*(?:\\d{1,4}\\s+)?(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
       const cuts = [0]; let mm;
       while ((mm = reCut.exec(big))) cuts.push(mm.index + mm[0].length);
       cuts.push(big.length);
@@ -1460,16 +1460,32 @@ body.na-inicio #avisoBase { display: none; }
     }
     // apendices e anexos
     {
-      const ids = post.concat(body).map(p => ({ p, t: T(p) })).filter(x => x.t.length < 220 && /^(AP[ÊE]NDICE|ANEXO)\s+\S/i.test(x.t) && !x.p.inTable && (isUpperText(x.t.split(/\s[–—-]\s/)[0]) || x.p.bold || x.p.align === 'center'));
+      // identificação: palavra + letra + separador, em qualquer caixa ("Anexo C: ...", "ANEXO F - ...")
+      const idRe = /^(AP[ÊE]NDICE|ANEXO)\s+([A-Za-z]{1,2})(?=\s*[-–—:.]|\s*$|\s+\S)/i;
+      const ids = post.concat(body).map(p => ({ p, t: T(p) })).filter(x => x.t.length < 220 && idRe.test(x.t) && !x.p.inTable && (/^(AP[ÊE]NDICE|ANEXO)\s+[A-Za-z]{1,2}\s*[-–—:.]/i.test(x.t) || isUpperText(x.t.split(/\s[–—-]\s/)[0]) || x.p.bold || x.p.align === 'center'));
       if (ids.length) {
-        const bad = ids.filter(x => !/^(AP[ÊE]NDICE|ANEXO)\s+[A-Z]{1,2}\s+[–—]\s+\S/i.test(x.t));
-        const onlyStyle = bad.length && bad.every(x => /^(AP[ÊE]NDICE|ANEXO)\s+[A-Z]{1,2}\s+[-–—]\s*\S/i.test(x.t));
+        const why = (t) => {
+          const r = [];
+          const m = /^(AP[ÊE]NDICE|ANEXO)\s+([A-Za-z]{1,2})\s*(.?)\s*/i.exec(t);
+          if (!/^(AP[ÊE]NDICE|ANEXO)\b/.test(t)) r.push(`"${m[1].toUpperCase()}" em maiúsculas`);
+          if (m[2] !== m[2].toUpperCase()) r.push('letra maiúscula');
+          const sepM = /^(?:AP[ÊE]NDICE|ANEXO)\s+[A-Za-z]{1,2}(\s*)([-–—:.]?)(\s*)/i.exec(t);
+          if (!sepM[2]) r.push('falta o travessão');
+          else if (sepM[2] !== '–' && sepM[2] !== '—') r.push(`usa "${sepM[2]}" no lugar do travessão (–)`);
+          else if (!sepM[1] || !sepM[3]) r.push('espaço antes e depois do travessão');
+          return r;
+        };
+        const bad = ids.map(x => ({ x, r: why(x.t) })).filter(y => y.r.length);
+        const onlyStyle = bad.length && bad.every(y => y.r.every(z => /espaço|maiúsculas/.test(z)));
         const letters = { AP: [], AN: [] };
-        ids.forEach(x => { const m = /^(AP[ÊE]NDICE|ANEXO)\s+([A-Z]{1,2})\b/.exec(x.t); if (m) letters[m[1].startsWith('AN') ? 'AN' : 'AP'].push(m[2]); });
-        const seqBad = Object.entries(letters).filter(([, ls]) => ls.some((l, k) => l.length === 1 && l.charCodeAt(0) !== 65 + k));
-        add({ id: 'est-apendice', cat: 'estrutura', sec: '3.1.4.3', weight: 'baixa', title: 'Apêndices e anexos com letra, travessão e título', status: seqBad.length || (bad.length && !onlyStyle) ? 'erro' : bad.length ? 'alerta' : 'ok',
-          detail: bad.length || seqBad.length ? (bad.length ? `${bad.length} título(s) fora do padrão "APÊNDICE A – Título". ` : '') + (seqBad.length ? 'As letras não seguem a sequência A, B, C...' : '') : `${ids.length} apêndice(s)/anexo(s) identificados corretamente.`,
-          evidence: bad.slice(0, 5).map(x => ({ where: loc(model, x.p), text: clip(x.t, 120) })), fix: 'Exemplo: "APÊNDICE A – Roteiro de entrevista".' });
+        ids.forEach(x => { const m = idRe.exec(x.t); if (m) letters[/^AN/i.test(m[1]) ? 'AN' : 'AP'].push(m[2].toUpperCase()); });
+        const seqNotes = [];
+        for (const [k, ls] of Object.entries(letters)) {
+          ls.forEach((l, i) => { if (l.length !== 1) return; const exp = String.fromCharCode(65 + i); if (l !== exp && (i === 0 || ls[i - 1].charCodeAt(0) + 1 !== l.charCodeAt(0))) seqNotes.push(`${k === 'AN' ? 'anexos' : 'apêndices'}: ${i ? `de ${ls[i - 1]} pula para ${l}` : `começa em ${l}, não em A`}`); });
+        }
+        add({ id: 'est-apendice', cat: 'estrutura', sec: '3.1.4.3', weight: 'baixa', title: 'Apêndices e anexos com letra, travessão e título', status: seqNotes.length || (bad.length && !onlyStyle) ? 'erro' : bad.length ? 'alerta' : 'ok',
+          detail: bad.length || seqNotes.length ? (bad.length ? `${bad.length} de ${ids.length} título(s) fora do padrão "APÊNDICE A – Título". ` : '') + (seqNotes.length ? `As letras devem ser maiúsculas consecutivas (A, B, C...): ${seqNotes.join('; ')}.` : '') : `${ids.length} apêndice(s)/anexo(s) identificados corretamente.`,
+          evidence: bad.slice(0, 8).map(y => ({ where: loc(model, y.x.p), text: clip(y.x.t, 100), note: y.r.join('; ') })), fix: 'Exemplo: "APÊNDICE A – Roteiro de entrevista".' });
       }
     }
 
@@ -1538,12 +1554,20 @@ body.na-inicio #avisoBase { display: none; }
           ok = parentSame && (prevLast == null ? last === 1 : last === prevLast + 1 && (n.length >= ctr.length || true));
           if (n.length > ctr.length + 1) ok = false;
         }
-        if (!ok) jumps.push(h);
+        if (!ok) {
+          // o que se esperava neste ponto, para o aluno achar o buraco
+          const parent = n.slice(0, -1); const pSame = parent.every((v, k) => v === ctr[k]);
+          if (!ctr.length && n.length > 1) h.expect = `falta a seção ${n[0]} antes desta`;
+          else if (n.length > 1 && !pSame) h.expect = `falta a seção ${parent.join('.')} antes desta`;
+          else if (n.length > ctr.length + 1) h.expect = `falta a seção ${n.slice(0, -1).join('.')} antes desta`;
+          else { const pl = ctr[n.length - 1]; const exp = parent.concat([pl == null ? 1 : pl + 1]).join('.'); h.expect = `esperado ${exp}${pl != null && n[n.length - 1] > pl + 1 ? ` (falta a ${exp})` : ''}`; }
+          jumps.push(h);
+        }
         ctr.length = n.length; n.forEach((v, k) => ctr[k] = v);
         void prev;
       }
       if (ilegivel) add({ id: 'sec-sequencia', cat: 'secoes', sec: '2.6', weight: 'media', title: 'Numeração progressiva das seções', status: 'na', detail: `${semNum} títulos do sumário aparecem sem número no texto do PDF (a numeração automática do Word às vezes é gravada só como desenho). A sequência não pôde ser conferida com segurança; confira manualmente.` });
-      else add({ id: 'sec-sequencia', cat: 'secoes', sec: '2.6', weight: 'media', title: 'Numeração progressiva das seções', status: jumps.length ? 'erro' : 'ok', detail: jumps.length ? `${jumps.length} título(s) quebram a sequência (número repetido, pulado ou subseção sem a seção anterior)${seqSource === sumSeq ? ', conforme a numeração do sumário' : ''}.` : 'A numeração progressiva está em sequência.', evidence: jumps.slice(0, 8).map(h => ({ where: h.fromSum ? 'sumário' : loc(model, h.p), text: clip(h.t.replace(/[\s.…_]{3,}\d*\s*$/, ''), 110) })) });
+      else add({ id: 'sec-sequencia', cat: 'secoes', sec: '2.6', weight: 'media', title: 'Numeração progressiva das seções', status: jumps.length ? 'erro' : 'ok', detail: jumps.length ? `${jumps.length} título(s) quebram a sequência (número repetido, pulado ou subseção sem a seção anterior)${seqSource === sumSeq ? ', conforme a numeração do sumário' : ''}.` : 'A numeração progressiva está em sequência.', evidence: jumps.slice(0, 8).map(h => ({ where: h.fromSum ? 'sumário' : loc(model, h.p), text: clip(h.t.replace(/[\s.…_\-–—]{3,}\d*\s*$/, ''), 110), note: h.expect || '' })) });
       const deep = numbered.filter(h => h.level > 5);
       if (deep.length) add({ id: 'sec-quinaria', cat: 'secoes', sec: '2.6', weight: 'baixa', title: 'Subdivisão até a seção quinária', status: 'alerta', detail: `${deep.length} título(s) passam da seção quinária. Recomenda-se limitar a numeração até cinco níveis.`, evidence: deep.slice(0, 4).map(h => ({ where: loc(model, h.p), text: clip(h.t, 100) })) });
       // destaque gradativo: primarias em caixa alta e consistencia por nivel
@@ -1740,7 +1764,7 @@ body.na-inicio #avisoBase { display: none; }
         if (!/\b(1[5-9]\d{2}|20\d{2})[a-z]?\b|\[s\.\s?d\.\]/.test(inner)) continue;
         if (/^\d/.test(inner.trim()) && !/^\d+,\s*p\./.test(inner)) continue;
         for (const part0 of inner.split(/;/)) {
-          const apParts = part0.split(/,?\s+apud\s+/i);
+          const apParts = part0.split(/,?\s*\bapud\b,?\s*/i);
           for (let ai = 0; ai < apParts.length; ai++) {
             const part = apParts[ai]; const apudOrig = ai < apParts.length - 1;
             const mm = /^\s*(.+?),\s*((?:c?\d{4}[a-z]?)(?:,\s*\d{4}[a-z]?)*|\[s\.\s?d\.\]|s\.\s?d\.)\s*(?:,\s*(.*))?$/u.exec(part.trim());
@@ -1759,9 +1783,13 @@ body.na-inicio #avisoBase { display: none; }
         let author = m[1];
         const pre = t.slice(Math.max(0, m.index - 40), m.index);
         const inv = /([\p{Lu}][\p{L}'’\-]+(?:\s[\p{Lu}][\p{L}'’\-]+)?),\s$/u.exec(pre);
-        if (inv && !/\s/.test(author)) author = inv[1];
+        if (inv && !/\s/.test(author) && !/^(Contudo|Por[ée]m|Entretanto|Todavia|Assim|Ainda|Al[ée]m|Logo|Portanto|Segundo|Conforme|Para|Nesse|Neste|Desse|Deste|Dessa|Desta|Por fim|Ou seja|Isto [ée]|Ademais|Inclusive|Enfim|Sobretudo|Ali[áa]s)$/i.test(inv[1])) author = inv[1];
+        // nome próprio de várias palavras antes do parêntese ("Insurreição Pernambucana (1645)", "Fundação Getúlio Vargas (2021)")
+        const phr = /((?:[\p{Lu}][\p{L}'’\-]+\s(?:(?:de|da|do|dos|das|e|por|&)\s)?)+)$/u.exec(pre);
+        const phrase = phr && !inv ? (phr[1] + author).replace(/\s+/g, ' ').trim() : (/\s(?:de|da|do|dos|das)\s/.test(author) ? author : '');
+        const prep = /(?:^|\s)(?:em|de|do|da|dos|das|no|na|nos|nas)\s$/u.test(pre);
         if (/^(Lei|Decreto|Resolução|Portaria|Figura|Tabela|Quadro|Gráfico|Em|No|Na|De|Desde|Até|Entre|Ano|Século|Censo|Constituição)$/i.test(author)) continue;
-        cites.push({ p, raw: m[0], author, years: [m[2]], loc: m[3] || '', kind: 'nar', idx: m.index + m[1].length + 1, end: m.index + m[0].length });
+        cites.push({ p, raw: m[0], author, years: [m[2]], loc: m[3] || '', kind: 'nar', idx: m.index + m[1].length + 1, end: m.index + m[0].length, phrase, prep });
       }
     }
     // numericas
@@ -1912,8 +1940,10 @@ body.na-inicio #avisoBase { display: none; }
     }
     // citacoes x referencias
     if (cites.length && refEntries.length) {
-      const surnameOf = (a) => a.replace(/\s+(et al\.?|e outros|e colaboradores)\s*$/i, '').replace(/\s+(in|apud)\s+.*$/i, '').split(/\s*[;,&]\s*|\s+(?:e|and|y)\s+/)[0].trim();
-      const cand = (a) => { const s = norm(surnameOf(a)); const toks = s.split(' '); return [s, toks[toks.length - 1], toks.slice(-2).join(' ')]; };
+      const surnameOf = (a) => a.replace(/\s*,?\s*(et\.?\s?al\.?|e outros|e colaboradores)\s*$/i, '').replace(/\s+(in|apud)\s+.*$/i, '').split(/\s*[;,&]\s*|\s+(?:e|and|y)\s+/)[0].trim();
+      const cand = (a) => { const s = norm(surnameOf(a)); const toks = s.split(' '); const out = [s, toks[toks.length - 1], toks.slice(-2).join(' ')]; if (a.includes('/')) a.split('/').forEach(x => { const n = norm(surnameOf(x)); if (n) out.push(n, n.split(' ').slice(-1)[0]); }); return out; };
+      const initials = (t) => norm(t).split(' ').filter(w => w && !/^(DE|DA|DO|DOS|DAS|E|EM|PARA|POR)$/.test(w)).map(w => w[0]).join('');
+      const allSur = new Set(); refEntries.forEach(r => { r.surnames.forEach(x => allSur.add(x)); allSur.add(r.key.split(' ')[0]); });
       const matched = new Set(); const orphan = [];
       const seenCite = new Set();
       for (const c of cites) {
@@ -1921,6 +1951,7 @@ body.na-inicio #avisoBase { display: none; }
         const key = norm(c.author) + '|' + c.years.join(',');
         if (seenCite.has(key)) continue; seenCite.add(key);
         const cs = cand(c.author);
+        if (c.phrase) { cs.push(norm(c.phrase), initials(c.phrase)); }
         let hit = false;
         for (const y0 of c.years) {
           const y = y0.replace(/^c/, '').replace(/[a-z]$/, '');
@@ -1928,13 +1959,15 @@ body.na-inicio #avisoBase { display: none; }
           const hits = refEntries.filter(r => (r.surnames.some(s => cs.includes(s)) || cs.some(x => x && r.key.startsWith(x)) || (full.length >= 4 && norm(r.text.slice(0, 180)).includes(full))) && (r.years.includes(y) || /s\.?\s?d/.test(y0)));
           if (hits.length) { hit = true; hits.forEach(h => matched.add(h)); }
         }
-        if (!hit) orphan.push(c);
+        // nome próprio ou lugar seguido de ano ("Insurreição Pernambucana (1645)", "em Mariana (2015)"), sem página e sem nenhuma obra desse nome na lista: não é chamada de citação
+        if (!hit && c.kind === 'nar' && (c.phrase || c.prep) && !c.loc && !cs.some(x => x && allSur.has(x))) { seenCite.delete(key); continue; }
+        if (!hit) { const same = refEntries.filter(r => r.surnames.some(x => cs.includes(x))); c.yearHint = same.length ? [...new Set(same.flatMap(r => r.years.length ? r.years : ['sem ano']))].slice(0, 4).join(', ') : ''; orphan.push(c); }
       }
       const uncited = refEntries.filter(r => !matched.has(r));
       const score = 1 - Math.min(1, (orphan.length / Math.max(1, seenCite.size)) * 1.2);
       add({ id: 'cit-refs', cat: 'citacoes', sec: '4.1.1.1 / 4.4.1', weight: 'alta', title: 'Toda citação no texto tem referência correspondente', status: orphan.length === 0 ? 'ok' : orphan.length / seenCite.size > 0.15 ? 'erro' : 'alerta', score,
-        detail: orphan.length ? `${orphan.length} de ${seenCite.size} obras citadas no texto não foram localizadas na lista de referências (pelo sobrenome e ano). Confira cada uma: grafias diferentes do nome ou referências quebradas no arquivo também aparecem aqui.` : `Todas as ${seenCite.size} obras citadas foram localizadas nas referências.`,
-        evidence: orphan.slice(0, 40).map(c => ({ where: loc(model, c.p), text: `${surnameOf(c.author)}, ${c.years.join(', ')}`, note: c.raw.length > 60 ? clip(c.raw, 90) : (c.raw !== `${surnameOf(c.author)}, ${c.years.join(', ')}` ? c.raw : '') })), fix: 'Inclua a referência de cada obra citada, ou corrija o sobrenome/ano na chamada para que coincidam com a lista.' });
+        detail: orphan.length ? `${orphan.length} de ${seenCite.size} obras citadas no texto não foram localizadas na lista de referências (pelo sobrenome e ano): ${orphan.filter(c => !c.yearHint).length} com autor ausente da lista e ${orphan.filter(c => c.yearHint).length} com o autor presente mas ano diferente. Confira cada uma: grafias diferentes do nome ou referências quebradas no arquivo também aparecem aqui.` : `Todas as ${seenCite.size} obras citadas foram localizadas nas referências.`,
+        evidence: orphan.slice(0, 40).map(c => ({ where: loc(model, c.p), text: `${surnameOf(c.author)}, ${c.years.join(', ')}`, note: (c.yearHint ? `autor na lista com outro ano: ${c.yearHint}` : 'autor ausente da lista') + (c.raw.length > 60 ? ' | ' + clip(c.raw, 80) : '') })), fix: 'Inclua a referência de cada obra citada, ou corrija o sobrenome/ano na chamada para que coincidam com a lista.' });
     }
 
     /* ==================== REFERÊNCIAS ==================== */
@@ -2092,7 +2125,7 @@ body.na-inicio #avisoBase { display: none; }
       // linhas corridas da lista; nova referência só quando a anterior está completa
       const lines = [];
       for (const p of paras) (p.lines || [{ text: T(p) }]).forEach((l, i) => lines.push({ p, t: l.text, first: i === 0, x0: l.x0, y: l.y, fs: l.fs, pg: p.page }));
-      const startRe = /^(\[\d{1,4}\]\s|\(\d{1,4}\)\s|\d{1,3}\.\s(?=[\p{Lu}])|[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}'’\-]{2,}(?:[\s\-]+(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E))*[.:]\s|[_\-–—]{3,}|[\p{Lu}][\p{Ll}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{Ll}]+))*,\s[\p{Lu}]|[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|of|the|[\p{Lu}][\p{L}'’\-]+)){0,5}\.\s[\p{Lu}])/u;
+      const startRe = /^(\[\d{1,4}\]\s|\(\d{1,4}\)\s|\d{1,3}\.\s(?=[\p{Lu}])|[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}][\p{Lu}\d'’\-]+(?:(?:[\s\-]+|\s[–&]\s)(?:[\p{Lu}\d'’\-]{2,}|DE|DA|DO|DOS|DAS|E|&))*(?:\s?\([\p{Lu}\d\-]{2,}\))?[.:](?:\s|$)|[\p{Lu}][\p{Lu}'’\-]+(?:\s(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E)){2,};\s[\p{Lu}]{2,}|[_\-–—]{3,}|[\p{Lu}][\p{Ll}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{Ll}]+))*,\s[\p{Lu}]|[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|of|the|[\p{Lu}][\p{L}'’\-]+)){0,5}\.\s[\p{Lu}])/u;
       const hasYear = (t) => /(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)|\[s\.\s?d\.\]|no prelo/i.test(t);
       const complete = (t) => !/\b(In|in|Separata de|Resenha de):?\s*$/.test(t) && ((/[.)\]]\s*$/.test(t) && (hasYear(t) || t.length > 140)) || (/;\s*$/.test(t) && hasYear(t) && t.length > 60));
       const capsStyle = lines.filter(L => L.first && /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*[,.]\s/u.test(L.t)).length >= lines.filter(L => L.first).length * 0.4;
@@ -2105,7 +2138,9 @@ body.na-inicio #avisoBase { display: none; }
       for (const L of lines) {
         if (numerada) { if (!cur || numStart.test(L.t)) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; } else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); } continue; }
         const isStart = startRe.test(L.t) && !notStart.test(L.t) && !(capsStyle && mixedStart.test(L.t) && !/^[\p{Lu}'’\-]{2,}[,.\s]/u.test(L.t));
-        const newItem = !cur || (isStart && !/^[_\-–—\s.]+$/.test(cur.text) && (complete(cur.text) || (L.first && !/[;:,]\s*$|\bIn:?\s*$/.test(cur.text))));
+        // lista em caixa alta: entrada forte ("SOBRENOME, X" ou "ENTIDADE (SIGLA).") depois de uma referência que já tem ano abre item novo, mesmo sem ponto final na anterior
+        const strongStart = capsStyle && isStart && /^(?:[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}][\p{Lu}\d'’\-]+(?:(?:[\s\-]+|\s[–&]\s)(?:[\p{Lu}\d'’\-]{2,}|DE|DA|DO|DOS|DAS|E|&))*(?:\s?\([\p{Lu}\d\-]{2,}\))?[.:](?:\s|$)|[\p{Lu}][\p{Lu}'’\-]+(?:\s(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E)){2,};\s[\p{Lu}]{2,})/u.test(L.t) && !/[\p{Lu}]{3,}\s*$/u.test(cur ? cur.text : '');
+        const newItem = !cur || (isStart && !/^[_\-–—\s.]+$/.test(cur.text) && (complete(cur.text) || (L.first && !/[;:,]\s*$|\bIn:?\s*$/.test(cur.text) && (hasYear(cur.text) || cur.text.length > 140 || !/[\p{Lu}]{3,}\s*$/u.test(cur.text))) || (strongStart && hasYear(cur.text) && cur.text.length > 40 && !/(\bIn:?|[;,&]|\be)\s*$/.test(cur.text))));
         if (newItem) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; }
         else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); }
       }
@@ -2119,7 +2154,7 @@ body.na-inicio #avisoBase { display: none; }
       const head = text.slice(0, 220).replace(/^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s*/, '');
       if (/^[_\-–—]{3,}/.test(head) && prev) { const r = Object.assign({}, prev, { p, text, dashRepeat: true, entryOk: true, years: [...new Set(text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || [])] }); prev = r; return r; }
       const personal = /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(head);
-      const entity = /^[\p{Lu}'’\-]{2,}(?:[\s\-]+(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E))*\.\s/u.test(head);
+      const entity = /^[\p{Lu}][\p{Lu}\d'’\-]+(?:(?:[\s\-]+|\s[–&]\s)(?:[\p{Lu}\d'’\-]{2,}|DE|DA|DO|DOS|DAS|E|&))*(?:\s?\([\p{Lu}\d\-]{2,}\))?\.\s/u.test(head);
       const titleEntry = /^[\p{Lu}'’\-]{2,}\s+[\p{Ll}\d]/u.test(head) || (/^(O|A|OS|AS|UM|UMA)\s+[\p{Lu}]{2,}\s+[\p{Ll}]/u.test(head));
       const entryOk = personal || entity || titleEntry || /^[\p{Lu}]{2,}[\p{Lu}\s]*\(/u.test(head) || /^[\p{Lu}\d\s'’\-]{6,}:/u.test(head);
       const surnames = [];
@@ -2130,8 +2165,10 @@ body.na-inicio #avisoBase { display: none; }
       }
       const key = norm(head.split(/[,.:]/)[0]);
       if (!surnames.length) surnames.push(key);
+      // sigla da entidade: "ENTIDADE (SIGLA)." e "SIGLA – ENTIDADE."
+      { const sg = /^[^.]{2,160}?\(([\p{Lu}\d\-]{2,})\)\s*\./u.exec(head); if (sg) surnames.push(norm(sg[1])); const dash = /^([\p{Lu}\d]{2,})\s[–-]\s([\p{Lu}][^.]{3,120})\./u.exec(head); if (dash) { surnames.push(norm(dash[1])); surnames.push(norm(dash[2])); } }
       if (entity) { const ini = key.split(' ').filter(w => !/^(DE|DA|DO|DOS|DAS|E|EM|PARA)$/.test(w)).map(w => w[0]).join(''); if (ini.length >= 2) surnames.push(ini); }
-      const years = [...new Set((text.replace(/acesso em\s*:?[^.]*\.[^.]*\.?\s*\d{4}/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
+      const years = [...new Set((text.replace(/acess(?:o|ado) em\s*:?.{0,25}?(?<!\d)\d{4}(?!\d)/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
       if (!years.length) { const y2 = text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g); if (y2) years.push(...y2); }
       const sortKey = strip(text.replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '')).toUpperCase().replace(/[^A-Z0-9 ,]/g, '');
       const r = { p, text, lr, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
