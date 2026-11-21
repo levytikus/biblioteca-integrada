@@ -1469,6 +1469,12 @@ body.na-inicio #avisoBase { display: none; }
     {
       const idxConc = findTitle(/^(\d+ ?)?(CAPITULO [\dIVX]+ )?(CONCLUSAO|CONCLUSOES|CONSIDERACOES FINAIS|CONCLUSION|CONCLUSIONS|CONCLUDING REMARKS|FINAL REMARKS|FINAL CONSIDERATIONS|CONCLUSIONES|CONSIDERACIONES FINALES|PALAVRAS FINAIS|NOTAS FINAIS)( .{0,60})?$/, Math.max(preEnd, 0), idxRefs >= 0 ? idxRefs : all.length);
       add({ id: 'est-conc', cat: 'estrutura', sec: '3.1.3.3', weight: 'alta', title: 'Conclusão ou considerações finais', status: idxConc >= 0 ? 'ok' : 'erro', detail: idxConc >= 0 ? 'Seção de conclusão encontrada.' : 'Não foi encontrada a seção de CONCLUSÃO ou CONSIDERAÇÕES FINAIS antes das referências.' });
+      // Manual 2.6: só errata, agradecimentos, listas, resumo, sumário, referências, glossário, apêndices, anexos e índices ficam sem número;
+      // as seções primárias do texto são numeradas a partir de 1 (o próprio manual usa "1 INTRODUÇÃO")
+      const semNumero = [idxIntro, idxConc].filter(i => i >= 0 && all[i]).map(i => all[i]).filter(p => !/^\d+[\s.\-–—)]/.test(T(p)) && !/^CAP[IÍ]TULO\s/i.test(T(p))); // número com sinal errado já é apontado em sec-indicativo
+      if (idxIntro >= 0 || idxConc >= 0) add({ id: 'sec-textual-num', cat: 'secoes', sec: '2.6', weight: 'media', title: 'Introdução e conclusão com indicativo numérico', status: semNumero.length ? 'erro' : 'ok',
+        detail: semNumero.length ? `${semNumero.length} seção(ões) primária(s) do texto sem número. Pelo manual, só errata, agradecimentos, listas, resumo, sumário, referências, glossário, apêndices, anexos e índices ficam sem indicativo numérico; a introdução é a seção 1 e as demais seguem a sequência.` : 'Introdução e conclusão têm indicativo numérico.',
+        evidence: semNumero.map(p => ({ where: loc(model, p), text: clip(T(p), 90), note: 'sem número' })), fix: 'Numere as seções primárias a partir de 1: "1 INTRODUÇÃO", ..., "5 CONSIDERAÇÕES FINAIS".' });
     }
     // referencias
     if (idxRefs < 0) add({ id: 'est-refs', cat: 'referencias', sec: '3.1.4.1', weight: 'alta', title: 'Seção "Referências"', status: 'erro', detail: 'Não foi encontrada a lista de REFERÊNCIAS ao final do texto.' });
