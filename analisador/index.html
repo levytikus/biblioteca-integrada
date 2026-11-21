@@ -1404,7 +1404,7 @@ body.na-inicio #avisoBase { display: none; }
       }
       if (model.kind === 'docx' && resumo.textPs[0]) {
         const r = resumo.textPs[0].lineRatio;
-        if (r < 1.38 || r > 1.85) add({ id: 'est-resumo-esp', cat: 'estrutura', sec: '3.1.2.1.3', weight: 'baixa', title: 'Resumo em espaço 1,5', status: 'alerta', detail: 'O manual do SiBI indica que o resumo seja digitado em espaço 1,5. Confirme com a secretaria do curso se há orientação diferente.' });
+        if (r < 1.38 || r > 1.85) add({ id: 'est-resumo-esp', cat: 'estrutura', sec: '3.1.2.1.3', weight: 'baixa', title: 'Resumo em espaço 1,5', status: 'erro', detail: `O resumo está com entrelinha ${String((r || 0).toFixed(2)).replace('.', ',')}. O manual determina que o resumo seja digitado em espaço 1,5.`, fix: 'Selecione o resumo e aplique Espaçamento de linha › 1,5.' });
       }
     }
     if (iAbs < 0) add({ id: 'est-abstract', cat: 'estrutura', sec: '3.1.2.1.4', weight: 'alta', title: 'Resumo em língua estrangeira (Abstract)', status: 'erro', detail: 'Não foi encontrado o resumo em língua estrangeira (ABSTRACT, RESUMEN etc.).' });
@@ -1430,6 +1430,16 @@ body.na-inicio #avisoBase { display: none; }
       const wrong = [];
       for (let k = 1; k < seq.length; k++) if (seq[k][1] < seq[k - 1][1]) wrong.push(`${seq[k][0]} aparece antes de ${seq[k - 1][0]}`);
       add({ id: 'est-ordem', cat: 'estrutura', sec: '3.1.2', weight: 'media', title: 'Ordem dos elementos pré-textuais', status: wrong.length ? 'erro' : 'ok', detail: wrong.length ? wrong.join('; ') + '. A ordem é: folha de rosto, errata, folha de aprovação, dedicatória, agradecimentos, epígrafe, resumo, resumo em língua estrangeira, listas e sumário.' : 'Os elementos pré-textuais seguem a ordem do manual.' });
+      // 3.1.2.2.3: AGRADECIMENTOS em caixa-alta e negrito
+      { const ia = findTitle(/^AGRADECIMENTOS?$/, 0, preEnd);
+        if (ia >= 0) { const p = all[ia]; const t = T(p); const caps = isUpperText(t); const neg = model.kind === 'docx' ? !!(p.bold || p.anyBold || p.outline != null && p.bold) : null;
+          const faltas = []; if (!caps) faltas.push('caixa-alta'); if (neg === false) faltas.push('negrito');
+          add({ id: 'est-agradec', cat: 'estrutura', sec: '3.1.2.2.3', weight: 'baixa', title: 'AGRADECIMENTOS em caixa-alta e negrito', status: faltas.length ? 'erro' : 'ok', detail: faltas.length ? `O título "${clip(t, 40)}" está sem ${faltas.join(' e ')}. O manual pede a palavra AGRADECIMENTOS em caixa-alta e negrito.` : (neg === null ? 'O título está em caixa-alta (o negrito não é medido em PDF).' : 'O título está em caixa-alta e negrito.'), evidence: faltas.length ? [{ where: loc(model, p), text: t }] : [] }); } }
+      // 3.1.2.2.7: lista de abreviaturas e siglas em ordem alfabética
+      { const il = findTitle(/^LISTA DE (ABREVIATURAS|SIGLAS)/, 0, preEnd);
+        if (il >= 0) { const its = []; for (let k = il + 1; k < preEnd && k < il + 120; k++) { const p = all[k]; const t = T(p); if (!t) continue; if (t.length < 60 && isUpperText(t) && !/^[\p{Lu}\d&./-]{2,12}\s+[-–—]?\s*\p{Lu}[\p{Ll}]/u.test(t)) break; for (const ln of (model.kind === 'pdf' && p.lines ? p.lines.map(l => l.text) : [t])) { const m = /^\s*([\p{L}\d][\p{L}\d&./-]{0,14})(?:\s|\s*[-–—:]\s)/u.exec(ln); if (m) { const L = m[1].replace(/[^\p{L}]/gu, ''); const up = (L.match(/\p{Lu}/gu) || []).length; if (!/^\d/.test(m[1]) && up >= 2 && up >= L.length * 0.5) its.push({ s: m[1], p }); } } /* só o que tem forma de sigla; linhas de continuação do extenso ficam de fora */ }
+          if (its.length >= 3) { const key = x => strip(x.s).toUpperCase().replace(/[^A-Z0-9]/g, ''); const fora = []; for (let k = 1; k < its.length; k++) if (key(its[k]).localeCompare(key(its[k - 1]), 'pt') < 0) fora.push(its[k]);
+            add({ id: 'est-siglas-ordem', cat: 'elementos', sec: '3.1.2.2.7', weight: 'baixa', title: 'Lista de abreviaturas e siglas em ordem alfabética', status: fora.length ? 'erro' : 'ok', detail: fora.length ? `${fora.length} item(ns) da lista fora da ordem alfabética. A lista é uma relação alfabética das abreviaturas e siglas.` : `Os ${its.length} itens da lista estão em ordem alfabética.`, evidence: fora.slice(0, 6).map(x => ({ where: loc(model, x.p), text: x.s, note: 'fora da ordem alfabética' })) }); } } }
       if (idxSumario >= 0) {
         const afterSum = [findTitle(/^LISTA DE /, idxSumario + 1, preEnd), findTitle(/^(RESUMO|ABSTRACT)$/, idxSumario + 1, preEnd)].filter(x => x > 0);
         add({ id: 'est-sumario-ultimo', cat: 'estrutura', sec: '3.1.2.1.5', weight: 'media', title: 'Sumário como último elemento pré-textual', status: afterSum.length ? 'erro' : 'ok', detail: afterSum.length ? 'Há listas ou resumos depois do sumário. O sumário deve ser o último elemento pré-textual.' : 'O sumário é o último elemento pré-textual.' });
@@ -1669,7 +1679,6 @@ body.na-inicio #avisoBase { display: none; }
           if (!bigCap.length && sameSize.length > caps.length / 2) add({ id: 'ilu-tamanho', cat: 'elementos', sec: '2.2 b', weight: 'baixa', title: 'Legendas em fonte menor que a do texto', status: 'alerta', detail: `${sameSize.length} legenda(s) usam o mesmo tamanho do texto (${fmt(bodyFs)} pt). O manual pede fonte menor e uniforme para legendas.`, evidence: sameSize.slice(0, 4).map(c => ({ where: loc(model, c.p), text: clip(c.t, 80) })) });
         }
         const hasList = findTitle(/^LISTA DE (ILUSTRACOES|FIGURAS|TABELAS|QUADROS|GRAFICOS)/, 0, preEnd) >= 0;
-        if (caps.length >= 5 && !hasList) add({ id: 'ilu-lista', cat: 'elementos', sec: '3.1.2.2.5', weight: 'baixa', title: 'Lista de ilustrações/tabelas', status: 'alerta', detail: `O trabalho tem ${caps.length} ilustrações/tabelas e nenhuma lista nos pré-textuais. A lista é opcional, mas recomendada quando há muitas ilustrações.` });
       }
     }
     // siglas 2.8
@@ -1793,7 +1802,7 @@ body.na-inicio #avisoBase { display: none; }
       // datas do mesmo autor em ordem cronológica: (Silva, 2020a, 2020b)
       const yk = (y) => { const m = /(\d{4})([a-z]?)/.exec(y || ''); return m ? +m[1] * 100 + (m[2] ? m[2].charCodeAt(0) - 96 : 0) : null; };
       const dBad = cites.filter(c => (c.years || []).length > 1 && c.years.map(yk).every(v => v != null) && c.years.map(yk).some((v, k, a) => k > 0 && v < a[k - 1]));
-      if (dBad.length) add({ id: 'cit-datas-ordem', cat: 'citacoes', sec: '4.1.1.2 d', weight: 'baixa', title: 'Datas do mesmo autor em ordem cronológica na chamada', status: 'alerta', detail: `${dBad.length} chamada(s) listam datas do mesmo autor fora de ordem. As datas vêm em ordem crescente, separadas por vírgula: (Silva, 2020a, 2020b).`, evidence: dBad.slice(0, 6).map(c => ({ where: loc(model, c.p), text: c.raw })) });
+      if (dBad.length) add({ id: 'cit-datas-ordem', cat: 'citacoes', sec: '4.1.1.2 d', weight: 'baixa', title: 'Datas do mesmo autor em ordem cronológica na chamada', status: 'alerta', detail: `${dBad.length} chamada(s) listam datas do mesmo autor fora de ordem. O manual mostra as datas em ordem crescente no exemplo (Foucault, 1986, 1993, 1996), sem regra escrita; por isso é ponto de atenção.`, evidence: dBad.slice(0, 6).map(c => ({ where: loc(model, c.p), text: c.raw })) });
       // entrada pelo título: primeira palavra (ou artigo/monossílabo + palavra) seguida de [...] (NBR 10520:2023)
       const MONO = /^(o|a|os|as|um|uma|uns|umas|the|an?|el|la|los|las|le|les|em|de|da|do|das|dos|no|na|nos|nas|por|com|sem|sob|que|se|e|ao|aos|à|às)$/i;
       const tHeads = refEntries.filter(r => r.titleEntry && !r.personal).map(r => {
@@ -1807,7 +1816,7 @@ body.na-inicio #avisoBase { display: none; }
         const th = tHeads.find(x => x.key === bare); if (!th) continue;
         if (th.more && !hasSup) tBad.push({ c, note: /(\.\.\.|…)\s*$/.test(a) ? 'use [...] em vez de reticências soltas' : 'falta [...] após a palavra do título' });
       }
-      if (tBad.length) add({ id: 'cit-titulo', cat: 'citacoes', sec: '4.1.1.1.2', weight: 'baixa', title: 'Chamada pelo título com supressão [...]', status: 'alerta', detail: `${tBad.length} chamada(s) de obras sem autoria não indicam a supressão do restante do título. Pela ABNT NBR 10520:2023, cita-se a primeira palavra do título (ou o artigo com a palavra seguinte) seguida de [...]: (A flor [...], 1995).`, evidence: tBad.slice(0, 6).map(x => ({ where: loc(model, x.c.p), text: x.c.raw, note: x.note })) });
+      if (tBad.length) add({ id: 'cit-titulo', cat: 'citacoes', sec: '4.1.1.1.2', weight: 'baixa', title: 'Chamada pelo título com supressão [...]', status: 'alerta', detail: `${tBad.length} chamada(s) de obras sem autoria não indicam a supressão do restante do título. O manual não detalha este caso (só traz o exemplo de título de uma palavra, (Inglês, 2012)) e remete à ABNT NBR 10520:2023, que manda citar a primeira palavra do título (ou o artigo com a palavra seguinte) seguida de [...]: (A flor [...], 1995). Por isso é ponto de atenção, não inconformidade.`, evidence: tBad.slice(0, 6).map(x => ({ where: loc(model, x.c.p), text: x.c.raw, note: x.note })) });
     }
     // citacoes diretas: aspas, pagina, mais de 3 linhas
     {
@@ -1850,22 +1859,24 @@ body.na-inicio #avisoBase { display: none; }
         return /\([^()]{2,120}\d{4}[^()]*\)\s*[.”"]?\s*$/.test(t) || /^[“"]/.test(t) || (pv && /:\s*$/.test(T(pv)));
       });
       if (blocks.length) {
+        const recs = blocks.map(p => p.indLeftCm || 0).sort((a, b) => a - b); const recuoPadrao = recs[Math.floor(recs.length / 2)];
         const probs = [];
         for (const p of blocks) {
           const t = T(p); const notes = [];
           if (p.sizePt && p.sizePt >= bodyFs - 0.1) notes.push('fonte igual à do texto');
           if (p.lineRatio && p.lineRatio > 1.25) notes.push('espaçamento maior que simples');
           if (/^[“"]/.test(t) && /[”"][^”"]{0,80}$/.test(t)) notes.push('não leva aspas');
-          if (p.indLeftCm < 3.4 || p.indLeftCm > 4.6) notes.push('recuo de ' + fmtCm(p.indLeftCm) + ' (recomendado 4 cm)');
+          // 2.2 b / 4.1.1.2 g: recuo padronizado; 4 cm é recomendação, então só a falta de padrão é problema
+          if (Math.abs(p.indLeftCm - recuoPadrao) > 0.4) notes.push('recuo de ' + fmtCm(p.indLeftCm) + ', diferente do padrão das demais (' + fmtCm(recuoPadrao) + ')');
           if (notes.length) probs.push({ p, notes });
         }
-        add({ id: 'cit-longa', cat: 'citacoes', sec: '4.1.1.2 g', weight: 'media', title: 'Citações longas: recuo de 4 cm, fonte menor, espaço simples, sem aspas', status: probs.length ? (probs.every(x => x.notes.length === 1 && /recuo/.test(x.notes[0])) ? 'alerta' : 'erro') : 'ok', detail: probs.length ? `${probs.length} de ${blocks.length} citações recuadas fora do padrão.` : blocks.length === 1 ? 'A citação longa destacada segue o padrão.' : `As ${blocks.length} citações longas destacadas seguem o padrão.`, evidence: probs.slice(0, 6).map(x => ({ where: loc(model, x.p), text: clip(T(x.p), 90), note: x.notes.join('; ') })), approx: model.kind === 'pdf' });
+        add({ id: 'cit-longa', cat: 'citacoes', sec: '4.1.1.2 g', weight: 'media', title: 'Citações longas: recuo padronizado, fonte menor, espaço simples, sem aspas', status: probs.length ? 'erro' : 'ok', detail: probs.length ? `${probs.length} de ${blocks.length} citações recuadas fora do padrão.` : blocks.length === 1 ? 'A citação longa destacada segue o padrão.' : `As ${blocks.length} citações longas destacadas seguem o padrão.`, evidence: probs.slice(0, 6).map(x => ({ where: loc(model, x.p), text: clip(T(x.p), 90), note: x.notes.join('; ') })), approx: model.kind === 'pdf' });
       }
     }
     // expressões latinas
     {
       const latin = /\b(apud|ibid\.?|ibidem|id\.|idem|op\.\s?cit\.?|opus citatum|loc\.\s?cit\.?|passim|et seq\.?|cf\.|sic)\b/gi;
-      const onlyNotes = /\b(ibid\.?|ibidem|id\.|idem|op\.\s?cit\.?|loc\.\s?cit\.?)\b/i;
+      const onlyNotes = /\b(ibid\.?|ibidem|id\.|idem|op\.\s?cit\.?|loc\.\s?cit\.?|passim|cf\.|et seq\.?)/i; // 4.1.2.2.2: todas, menos apud, só em notas
       const inBody = []; const notItal = [];
       for (const p of body) {
         const t = p.rawText || T(p); let m;
@@ -1889,7 +1900,7 @@ body.na-inicio #avisoBase { display: none; }
         if (tot) add({ id: 'cit-etal-italico', cat: 'citacoes', sec: '4.1.2.2', weight: 'baixa', title: 'et al. em itálico', status: etal.length ? 'erro' : 'ok', detail: etal.length ? `${etal.length} de ${tot} ocorrência(s) de "et al." sem itálico, nas chamadas ou nas referências. O manual pede itálico em todas as expressões latinas e suas abreviaturas, e os exemplos usam (Barbosa et al., 2008) com et al. em itálico.` : `As ${tot} ocorrências de "et al." estão em itálico.`, evidence: etal.slice(0, 6).map(x => ({ where: loc(model, x.p), text: clip(x.t, 90) })), fix: 'Selecione "et al." e aplique itálico (Ctrl+I), no texto e nas referências.' });
       }
       if (inBody.length || notItal.length || cites.length) {
-        if (inBody.length) add({ id: 'cit-latinas-notas', cat: 'citacoes', sec: '4.1.2.2', weight: 'baixa', title: 'Ibid., op. cit., idem e loc. cit. só em notas', status: 'erro', detail: `${inBody.length} uso(s) de expressões latinas no corpo do texto. Com exceção de apud, essas expressões só podem aparecer em notas.`, evidence: inBody.slice(0, 6).map(x => ({ where: loc(model, x.p), text: x.w, note: clip(T(x.p), 70) })) });
+        if (inBody.length) add({ id: 'cit-latinas-notas', cat: 'citacoes', sec: '4.1.2.2', weight: 'baixa', title: 'Ibid., idem, op. cit., passim, loc. cit., cf. e et seq. só em notas', status: 'erro', detail: `${inBody.length} uso(s) de expressões latinas no corpo do texto. Com exceção de apud, essas expressões só podem aparecer em notas.`, evidence: inBody.slice(0, 6).map(x => ({ where: loc(model, x.p), text: x.w, note: clip(T(x.p), 70) })) });
         if (model.kind === 'docx' && (notItal.length || inBody.length)) add({ id: 'cit-latinas-italico', cat: 'citacoes', sec: '4.1.2.2', weight: 'baixa', title: 'Expressões latinas em itálico', status: notItal.length ? 'erro' : 'ok', detail: notItal.length ? `${notItal.length} expressão(ões) latina(s) sem itálico (apud, ibid., op. cit., passim, cf. etc.).` : 'As expressões latinas estão em itálico.', evidence: notItal.slice(0, 6).map(x => ({ where: x.p ? loc(model, x.p) : 'nota', text: x.w, note: x.note || clip(T(x.p), 60) })) });
       }
     }
@@ -1924,7 +1935,6 @@ body.na-inicio #avisoBase { display: none; }
       add({ id: 'cit-refs', cat: 'citacoes', sec: '4.1.1.1 / 4.4.1', weight: 'alta', title: 'Toda citação no texto tem referência correspondente', status: orphan.length === 0 ? 'ok' : orphan.length / seenCite.size > 0.15 ? 'erro' : 'alerta', score,
         detail: orphan.length ? `${orphan.length} de ${seenCite.size} obras citadas no texto não foram localizadas na lista de referências (pelo sobrenome e ano). Confira cada uma: grafias diferentes do nome ou referências quebradas no arquivo também aparecem aqui.` : `Todas as ${seenCite.size} obras citadas foram localizadas nas referências.`,
         evidence: orphan.slice(0, 40).map(c => ({ where: loc(model, c.p), text: `${surnameOf(c.author)}, ${c.years.join(', ')}`, note: c.raw.length > 60 ? clip(c.raw, 90) : (c.raw !== `${surnameOf(c.author)}, ${c.years.join(', ')}` ? c.raw : '') })), fix: 'Inclua a referência de cada obra citada, ou corrija o sobrenome/ano na chamada para que coincidam com a lista.' });
-      if (uncited.length) add({ id: 'cit-refs-inv', cat: 'referencias', sec: '3.1.4.1', weight: 'baixa', title: 'Referências citadas no texto', status: uncited.length / refEntries.length > 0.2 ? 'alerta' : 'ok', detail: uncited.length / refEntries.length > 0.2 ? `${uncited.length} de ${refEntries.length} referências não foram encontradas em nenhuma chamada do texto. Confira se são obras citadas ou se a lista virou bibliografia consultada.` : `${refEntries.length - uncited.length} de ${refEntries.length} referências estão citadas no texto.`, evidence: uncited.length / refEntries.length > 0.2 ? uncited.slice(0, 8).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) : [] });
     }
 
     /* ==================== REFERÊNCIAS ==================== */
@@ -1938,9 +1948,16 @@ body.na-inicio #avisoBase { display: none; }
       const dashes = R.filter(r => r.dashRepeat);
       if (dashes.length) add({ id: 'ref-traco', cat: 'referencias', sec: '4.4.1', weight: 'baixa', title: 'Autor repetido escrito por extenso (sem traço)', status: 'erro', score: 1 - dashes.length / R.length, detail: `${dashes.length} referência(s) substituem o nome do autor repetido por traço (______). Pelo manual, quando há coincidência de entrada, as entradas subsequentes devem ser repetidas por extenso.`, evidence: dashes.slice(0, 5).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })), fix: 'Troque o traço pelo nome do autor: FREYRE, Gilberto. Casa grande & senzala... / FREYRE, Gilberto. Sobrados e mocambos...' });
       // ordem alfabetica
+      if (numericCount >= 3) {
+        const nums = R.map(r => { const m = /^\s*(?:\[(\d+)\]|\((\d+)\)|(\d{1,3})\.)\s/.exec(r.text); return m ? +(m[1] || m[2] || m[3]) : null; });
+        if (nums.filter(n => n != null).length >= R.length * 0.6) { const fora = []; let ant = 0; nums.forEach((n, k) => { if (n == null) return; if (n !== ant + 1) fora.push(R[k]); ant = n; });
+          add({ id: 'ref-ordem-num', cat: 'referencias', sec: '4.4.2', weight: 'media', title: 'Referências na ordem numérica de citação', status: fora.length ? 'erro' : 'ok', detail: fora.length ? `${fora.length} referência(s) quebram a sequência numérica. No sistema numérico, a lista segue a mesma ordem numérica crescente do texto.` : `As ${R.length} referências seguem a ordem numérica.`, evidence: fora.slice(0, 6).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) }); }
+      }
       if (numericCount < 3) {
         const out = [];
-        const ek = (r) => strip(r.text.replace(/^(\[\d+\]|\(\d+\)|\d{1,3}\.)\s*/, '').replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '').split(/[,.(:]/)[0]).toUpperCase().replace(/[^A-Z ]/g, '').trim();
+        const MONO = /^((O|A|OS|AS|UM|UMA|UNS|UMAS|THE|AN?|EL|LA|LOS|LAS|LE|LES|DE|DA|DO|DAS|DOS|EM|NO|NA|NOS|NAS|POR|COM|SEM|SOB|QUE|SE|E|AO|AOS|À|ÀS)\s+)+/i;
+        // 4.2: na entrada pelo título, artigos e palavras monossilábicas não contam para a alfabetação
+        const ek = (r) => { let t = r.text.replace(/^(\[\d+\]|\(\d+\)|\d{1,3}\.)\s*/, ''); if (r.titleEntry && !r.personal) t = t.replace(MONO, ''); return strip(t.split(/[,.(:]/)[0]).toUpperCase().replace(/[^A-Z ]/g, '').trim(); };
         const gt = (x, y) => x && y && x !== y && x.localeCompare(y, 'pt', { sensitivity: 'base' }) > 0;
         for (let k = 1; k < R.length; k++) {
           if (R[k].dashRepeat || R[k - 1].dashRepeat) continue; const a = ek(R[k - 1]), b = ek(R[k]);
@@ -1991,6 +2008,8 @@ body.na-inicio #avisoBase { display: none; }
       if (sepBad.length) add({ id: 'ref-autores', cat: 'referencias', sec: '4.3.1.2', weight: 'baixa', title: 'Autores separados por ponto e vírgula', status: 'erro', detail: `${sepBad.length} referência(s) separam os autores com "e" ou vírgula. Os nomes são separados por ponto e vírgula seguido de espaço: "DAVIS, G. B.; PARKER, C. A."`, evidence: sepBad.slice(0, 6).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) });
       // "In:"
       const inBad = R.filter(r => /\.\s(In|in|IN)\s+[\p{Lu}]{2,}/u.test(r.text) && !/\b(In|in):/.test(r.text));
+      if (model.kind === 'docx') { const inNoIt = R.filter(r => { const m = /\bIn:/.exec(r.text); if (!m) return false; const rr = (r.p.runs || []).find(x => x.start <= m.index && x.end > m.index); return rr && !rr.i; });
+        if (inNoIt.length) add({ id: 'ref-in-italico', cat: 'referencias', sec: '4.2.1.3', weight: 'baixa', title: '"In:" em itálico', status: 'erro', detail: `${inNoIt.length} referência(s) de parte de obra trazem "In:" sem itálico. O manual pede a expressão "In:" em itálico.`, evidence: inNoIt.slice(0, 5).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })), fix: 'Selecione "In:" e aplique itálico.' }); }
       if (inBad.length) add({ id: 'ref-in', cat: 'referencias', sec: '4.2.1.3', weight: 'baixa', title: 'Partes de obras com "In:"', status: 'erro', detail: `${inBad.length} referência(s) de capítulo usam "In" sem dois-pontos.`, evidence: inBad.slice(0, 5).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) });
       // pp.
       const ppBad = R.filter(r => /\bpp\.\s?\d|\bp[áa]gs?\.\s?\d/i.test(r.text));
@@ -2015,6 +2034,7 @@ body.na-inicio #avisoBase { display: none; }
         add({ id: 'ref-destaque', cat: 'referencias', sec: '4.2', weight: 'media', title: 'Destaque do título uniforme (negrito, itálico ou grifo)', status: main === 'sem destaque' ? 'erro' : off.length ? 'erro' : 'ok', score: main === 'sem destaque' ? 0.2 : 1 - off.length / Math.max(1, kinds.length),
           detail: main === 'sem destaque' ? 'A maioria das referências não destaca o título. O título deve receber destaque (negrito, itálico ou grifo), igual em todas as referências.' : off.length ? `O padrão do trabalho é ${main}, mas ${off.length} referência(s) usam ${[...new Set(off.map(x => x.k))].join(', ')}.` : `Todas as referências destacam o título em ${main}.`,
           evidence: off.slice(0, 8).map(x => ({ where: loc(model, x.r.p), text: clip(x.r.text, 100), note: x.k })), fix: 'Quando a entrada é pelo título, a primeira palavra fica em maiúsculas e não há destaque.' });
+        if (main === 'itálico') add({ id: 'ref-destaque-italico', cat: 'referencias', sec: '4.3.3', weight: 'baixa', title: 'Título das referências preferencialmente em negrito', status: 'alerta', detail: 'O destaque do título está em itálico. O manual recomenda o negrito e diz que o itálico não é recomendável, por ser usado para palavras estrangeiras. Não é erro, desde que seja uniforme.' });
       } else {
         const spaced = R.filter(r => r.lr != null ? r.lr > 1.3 : (r.p.lineRatio && r.p.lineRatio > 1.3 && r.p.lines && r.p.lines.length > 1));
         if (spaced.length) add({ id: 'ref-espaco', cat: 'referencias', sec: '2.4 / 4.2', weight: 'media', title: 'Referências em espaço simples', status: spaced.length / R.length > 0.3 ? 'erro' : 'alerta', detail: `${spaced.length} referência(s) parecem ter espaçamento maior que simples.`, approx: true });
@@ -2171,7 +2191,7 @@ body.na-inicio #avisoBase { display: none; }
       lines.push(`<line x1="${x0}" y1="${y + 3}" x2="${x0 + 50}" y2="${y + 3}" stroke="var(--muted)" stroke-width=".5"/>`);
       lines.push(`<rect class="svg-line" x="${x0}" y="${y + 6}" width="${(x1 - x0) - 20}" height="1.4" rx=".5"/><rect class="svg-line" x="${x0}" y="${y + 9.5}" width="${(x1 - x0) - 60}" height="1.4" rx=".5"/>`);
       // anotações
-      lines.push(`<text class="svg-lbl-m" x="${x0 + 40}" y="${qy - 2.4}" style="font-size:6.4px">citação longa: recuo de 4 cm, fonte menor, espaço simples</text>`);
+      lines.push(`<text class="svg-lbl-m" x="${x0 + 40}" y="${qy - 2.4}" style="font-size:6.4px">citação longa: recuo padronizado (recomendado 4 cm), fonte menor, espaço simples</text>`);
       lines.push(`<line x1="${x0}" y1="${qy + 7}" x2="${x0 + 40}" y2="${qy + 7}" stroke="var(--accent)" stroke-width=".5" marker-end="url(#ah)" marker-start="url(#ah2)"/>`);
       s += lines.join('');
       s += `<text x="${W - 20}" y="${20 + 3}" text-anchor="end" style="font:600 8px var(--f-body);fill:var(--ink)">27</text>`;
