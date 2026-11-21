@@ -906,7 +906,7 @@ body.na-inicio #avisoBase { display: none; }
         const nxt = pos === 'top' ? pg.lines[1] : pg.lines[pg.lines.length - 2];
         const edgeNum = x.items.some(it => /^\s*(\d{1,4}|[ivxlc]{1,6})\s*$/i.test(it.str) && (it.x > pg.w * 0.62 || it.x + it.w < pg.w * 0.38));
         const isolated = nxt && Math.abs(nxt.y - x.y) > x.fs * 1.9;
-        const latexHead = pos === 'top' && edgeNum && isolated && x.items.length > 1;
+        const latexHead = pos === 'top' && edgeNum && isolated && x.items.length > 1 && !/[.…_]{4,}|(?:\.\s){3,}/.test(x.text); // linha de sumário com pontilhado não é cabeçalho
         if (!latexHead && ((cnt[k] || 0) < 3 || k === '#')) continue;
         x.isRunHead = true; x.isPageNum = true;
         const nums = x.items.filter(it => /^\s*(\d{1,4}|[ivxlc]{1,6})\s*$/i.test(it.str));
@@ -1109,7 +1109,7 @@ body.na-inicio #avisoBase { display: none; }
       let big = '', marks = [];
       for (const b of buf) { marks.push({ at: big.length, p: b.p }); big += b.t + ' '; }
       const LEAD = '(?:(?:\\.\\s?){2,}|…+|_{2,}|[-–—]{2,}|\\s-\\s*p\\.|\\s-)';
-      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:(?:\\.\\s?){3,}|[-–—]{3,})\\s*(?:\\d{1,4}\\s+)?(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
+      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:(?:\\.\\s?){3,}|[-–—]{3,})\\s*(?:\\d{1,4}\\s+)?(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|(?<!CAP[IÍ]TULO)\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
       const cuts = [0]; let mm;
       while ((mm = reCut.exec(big))) cuts.push(mm.index + mm[0].length);
       cuts.push(big.length);
@@ -1523,6 +1523,9 @@ body.na-inicio #avisoBase { display: none; }
     const headRe = /^(\d{1,2}(?:\.\d{1,2}){0,6})(\.?)(\s*)([-–—:.)]?)\s*(\S.*)$/u;
     const headings = [];
     const sumNumSet = new Set(sumEntries.map(e => (sumParse(e.text) || {}).num).filter(Boolean));
+    // título do sumário por número: um parágrafo "2. É possível...?" não é a seção 2 só porque o sumário tem um 2
+    const sumTitles = {}; sumEntries.forEach(e => { const sp = sumParse(e.text); if (sp) (sumTitles[sp.num] = sumTitles[sp.num] || []).push(titleKey(cleanSum(sp.title)).replace(/\s+/g, '')); });
+    const sumHas = (num, title) => { const ts = sumTitles[num]; if (!ts) return false; const k = titleKey(title).replace(/\s+/g, ''); return ts.some(x => x && k && (x.startsWith(k.slice(0, 18)) || k.startsWith(x.slice(0, 18)))); };
     const roman = (r) => { const v = { I: 1, V: 5, X: 10, L: 50, C: 100 }; let n = 0; for (let i = 0; i < r.length; i++) { const a = v[r[i]], b = v[r[i + 1]] || 0; n += a < b ? -a : a; } return n; };
     for (const p of body.concat(post.slice(0, 0))) {
       if (p.inTable || p.isToc) continue;
@@ -1543,7 +1546,7 @@ body.na-inicio #avisoBase { display: none; }
       if (model.kind === 'pdf') {
         if (p.lines && p.lines.length > (isUpperText(title) ? 4 : 2)) continue;
         if ((title.match(/(^|\s)\d+(\s|$)/g) || []).length >= 2) continue; // linha de tabela
-        const inSum = sumNumSet.has(m[1]);
+        const inSum = sumNumSet.has(m[1]) && sumHas(m[1], title);
         if (/[=−+∑∫≤≥∆Ω→]|\(\d+\.\d+\)\s*$/.test(title) || !/\p{L}{3,}/u.test(title)) continue;
         if (!isUpperText(title) && words(title) > 16) continue;
         if (!inSum && (/\?\s*$/.test(title) || (p.indLeftCm || 0) > 1.5)) continue;
@@ -1590,7 +1593,7 @@ body.na-inicio #avisoBase { display: none; }
           if (!ctr.length && n.length > 1) h.expect = `falta a seção ${n[0]} antes desta`;
           else if (n.length > 1 && !pSame) h.expect = `falta a seção ${parent.join('.')} antes desta`;
           else if (n.length > ctr.length + 1) h.expect = `falta a seção ${n.slice(0, -1).join('.')} antes desta`;
-          else { const pl = ctr[n.length - 1]; const exp = parent.concat([pl == null ? 1 : pl + 1]).join('.'); h.expect = `esperado ${exp}${pl != null && n[n.length - 1] > pl + 1 ? ` (falta a ${exp})` : ''}`; }
+          else { const pl = ctr[n.length - 1]; const exp = parent.concat([pl == null ? 1 : pl + 1]).join('.'); h.expect = `esperado ${exp}${pl != null && n[n.length - 1] > pl + 1 ? ` (falta a ${exp})` : pl != null && n[n.length - 1] <= pl ? ` (a numeração volta a ${n.join('.')} depois de ${parent.concat([pl]).join('.')})` : ''}`; }
           jumps.push(h);
         }
         ctr.length = n.length; n.forEach((v, k) => ctr[k] = v);
@@ -1937,7 +1940,7 @@ body.na-inicio #avisoBase { display: none; }
           if (p.lineRatio && p.lineRatio > 1.25) notes.push('espaçamento maior que simples');
           if (/^[“"]/.test(t) && /[”"][^”"]{0,80}$/.test(t)) notes.push('não leva aspas');
           // 2.2 b / 4.1.1.2 g: recuo padronizado; 4 cm é recomendação, então só a falta de padrão é problema
-          if (Math.abs(p.indLeftCm - recuoPadrao) > 0.4) notes.push('recuo de ' + fmtCm(p.indLeftCm) + ', diferente do padrão das demais (' + fmtCm(recuoPadrao) + ')');
+          if (Math.abs(p.indLeftCm - recuoPadrao) > 0.4) notes.push('recuo de ' + fmtCm(p.indLeftCm) + ', diferente do padrão das demais (' + fmtCm(recuoPadrao) + ')' + (Math.abs(recuoPadrao - 4) > 0.4 ? '; o manual recomenda 4 cm para todas' : ''));
           if (notes.length) probs.push({ p, notes });
         }
         add({ id: 'cit-longa', cat: 'citacoes', sec: '4.1.1.2 g', weight: 'media', title: 'Citações longas: recuo padronizado, fonte menor, espaço simples, sem aspas', status: probs.length ? 'erro' : 'ok', detail: probs.length ? `${probs.length} de ${blocks.length} citações recuadas fora do padrão.` : blocks.length === 1 ? 'A citação longa destacada segue o padrão.' : `As ${blocks.length} citações longas destacadas seguem o padrão.`, evidence: probs.slice(0, 6).map(x => ({ where: loc(model, x.p), text: clip(T(x.p), 90), note: x.notes.join('; ') })), approx: model.kind === 'pdf' });
@@ -2185,7 +2188,11 @@ body.na-inicio #avisoBase { display: none; }
         const isStart = startRe.test(L.t) && !notStart.test(L.t) && !(capsStyle && mixedStart.test(L.t) && !/^[\p{Lu}'’\-]{2,}[,.\s]/u.test(L.t));
         // lista em caixa alta: entrada forte ("SOBRENOME, X" ou "ENTIDADE (SIGLA).") depois de uma referência que já tem ano abre item novo, mesmo sem ponto final na anterior
         const strongStart = capsStyle && isStart && /^(?:[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]|[\p{Lu}][\p{Lu}\d'’\-]+(?:(?:[\s\-]+|\s[–&]\s)(?:[\p{Lu}\d'’\-]{2,}|DE|DA|DO|DOS|DAS|E|&))*(?:\s?\([\p{Lu}\d\-]{2,}\))?[.:](?:\s|$)|[\p{Lu}][\p{Lu}'’\-]+(?:\s(?:[\p{Lu}'’\-]{2,}|DE|DA|DO|DOS|DAS|E)){2,};\s[\p{Lu}]{2,})/u.test(L.t) && !/[\p{Lu}]{3,}\s*$/u.test(cur ? cur.text : '');
-        const newItem = !cur || (isStart && !/^[_\-–—\s.]+$/.test(cur.text) && (complete(cur.text) || (L.first && !/[;:,]\s*$|\bIn:?\s*$/.test(cur.text) && (hasYear(cur.text) || cur.text.length > 140 || !/[\p{Lu}]{3,}\s*$/u.test(cur.text))) || (strongStart && hasYear(cur.text) && cur.text.length > 40 && !/(\bIn:?|[;,&]|\be)\s*$/.test(cur.text))));
+        // referência que termina em conectivo ("...Centro de Tecnologia e") ou com "In:" ainda sem ano continua na linha seguinte, mesmo depois de quebra de página
+        const openEnd = cur && (/(?:\b(?:e|de|da|do|dos|das|em|and|of|the|in|para|com)|[-–,;&])\s*$/i.test(cur.text) || (/\bIn:/.test(cur.text) && !hasYear(cur.text.split(/\bIn:/).pop())));
+        // referência ainda sem ano só fecha se a linha seguinte começar claramente por autor ("Sobrenome, X." ou "SOBRENOME, X.")
+        const noYearYet = cur && !hasYear(cur.text) && !strongStart && !/^[\p{Lu}][\p{L}'’\-]+(?:\s(?:de|da|do|dos|das|van|von|del|[\p{Lu}][\p{L}'’\-]+))*,\s[\p{Lu}]/u.test(L.t);
+        const newItem = !cur || (!openEnd && !noYearYet && isStart && !/^[_\-–—\s.]+$/.test(cur.text) && (complete(cur.text) || (L.first && !/[;:,]\s*$|\bIn:?\s*$/.test(cur.text) && (hasYear(cur.text) || cur.text.length > 140 || !/[\p{Lu}]{3,}\s*$/u.test(cur.text))) || (strongStart && hasYear(cur.text) && cur.text.length > 40 && !/(\bIn:?|[;,&]|\be)\s*$/.test(cur.text))));
         if (newItem) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; }
         else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); }
       }
