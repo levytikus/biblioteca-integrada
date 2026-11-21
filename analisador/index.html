@@ -1051,7 +1051,7 @@ body.na-inicio #avisoBase { display: none; }
     return m ? { num: m[1], title: m[2] } : null;
   }
   const titleKey = (t) => norm(String(t || '').replace(/^[\s\-–—:.)]+/, ''));
-  const UNNUMBERED = ['ERRATA', 'AGRADECIMENTOS', 'AGRADECIMENTO', 'LISTA DE ILUSTRACOES', 'LISTA DE FIGURAS', 'LISTA DE TABELAS', 'LISTA DE QUADROS', 'LISTA DE GRAFICOS', 'LISTA DE ABREVIATURAS E SIGLAS', 'LISTA DE ABREVIATURAS', 'LISTA DE SIGLAS', 'LISTA DE SIMBOLOS', 'RESUMO', 'ABSTRACT', 'RESUMEN', 'RESUME', 'SUMARIO', 'REFERENCIAS', 'GLOSSARIO', 'APENDICE', 'APENDICES', 'ANEXO', 'ANEXOS', 'INDICE'];
+  const UNNUMBERED = ['ERRATA', 'AGRADECIMENTOS', 'AGRADECIMENTO', 'LISTA DE ILUSTRACOES', 'LISTA DE FIGURAS', 'LISTA DE TABELAS', 'LISTA DE QUADROS', 'LISTA DE GRAFICOS', 'LISTA DE ABREVIATURAS E SIGLAS', 'LISTA DE ABREVIATURAS', 'LISTA DE SIGLAS', 'LISTA DE SIMBOLOS', 'RESUMO', 'ABSTRACT', 'RESUMEN', 'RESUME', 'SUMARIO', 'REFERENCIAS', 'REFERENCIAS BIBLIOGRAFICAS', 'BIBLIOGRAFIA', 'GLOSSARIO', 'APENDICE', 'APENDICES', 'ANEXO', 'ANEXOS', 'INDICE'];
   const isUnnumberedTitle = (t) => {
     const n = norm(t);
     if (UNNUMBERED.includes(n)) return true;
@@ -1136,7 +1136,7 @@ body.na-inicio #avisoBase { display: none; }
     // início da parte textual quando não há "Introdução": primeiro título da primeira entrada do sumário
     let bodyStart = idxIntro;
     if (bodyStart < 0 && sumEntries.length) {
-      const first = sumEntries.map(e => e.text.replace(/[\t ]*[.…·_ ]{2,}[\t ]*\d{0,4}\s*$/, '').replace(/\s+-?\s*p?\.?\s*\d{1,4}\s*$/, '').trim()).find(x => x.length > 2);
+      const first = sumEntries.map(e => cleanSum(e.text).replace(/\s+-\s*p?\.?\s*$/, '').trim()).find(x => x.length > 2); // "1. ABERTURA - p. 12"
       const key = first ? norm(first).replace(/^\d+( \d+)* /, '').slice(0, 30) : null;
       if (key) for (let k = bodyStartSearch; k < all.length; k++) { const t = T(all[k]); if (t && t.length < 160 && norm(t).includes(key)) { bodyStart = k; break; } }
     }
@@ -1470,10 +1470,15 @@ body.na-inicio #avisoBase { display: none; }
       }
     }
     // parte textual
-    add({ id: 'est-intro', cat: 'estrutura', sec: '3.1.3.1', weight: 'alta', title: 'Introdução', status: idxIntro >= 0 ? 'ok' : 'erro', detail: idxIntro >= 0 ? 'Seção de introdução encontrada.' : 'Não foi encontrada a seção INTRODUÇÃO após o sumário.' });
+    // sem "Introdução" no título, mas com a primeira seção do sumário achada no texto ("1. ABERTURA"): a seção existe com outro nome; aponta como atenção
+    const introLike = idxIntro < 0 && bodyStart >= 0 && all[bodyStart] && T(all[bodyStart]).length < 120 ? bodyStart : -1;
+    add({ id: 'est-intro', cat: 'estrutura', sec: '3.1.3.1', weight: 'alta', title: 'Introdução', status: idxIntro >= 0 ? 'ok' : introLike >= 0 ? 'alerta' : 'erro', detail: idxIntro >= 0 ? 'Seção de introdução encontrada.' : introLike >= 0 ? `Não há seção chamada Introdução. A primeira seção do texto é "${clip(T(all[introLike]), 60)}"; se ela apresenta o tema, os objetivos e a organização do trabalho, faz o papel da introdução, que o manual nomeia Introdução.` : 'Não foi encontrada a seção INTRODUÇÃO após o sumário.', evidence: introLike >= 0 ? [{ where: loc(model, all[introLike]), text: clip(T(all[introLike]), 80), note: 'primeira seção do texto' }] : undefined });
     {
       const idxConc = findTitle(/^(\d+ ?)?(CAPITULO [\dIVX]+ )?(CONCLUSAO|CONCLUSOES|CONSIDERACOES FINAIS|CONCLUSION|CONCLUSIONS|CONCLUDING REMARKS|FINAL REMARKS|FINAL CONSIDERATIONS|CONCLUSIONES|CONSIDERACIONES FINALES|PALAVRAS FINAIS|NOTAS FINAIS)( .{0,60})?$/, Math.max(preEnd, 0), idxRefs >= 0 ? idxRefs : all.length);
-      add({ id: 'est-conc', cat: 'estrutura', sec: '3.1.3.3', weight: 'alta', title: 'Conclusão ou considerações finais', status: idxConc >= 0 ? 'ok' : 'erro', detail: idxConc >= 0 ? 'Seção de conclusão encontrada.' : 'Não foi encontrada a seção de CONCLUSÃO ou CONSIDERAÇÕES FINAIS antes das referências.' });
+      // última seção primária numerada antes das referências ("9. DESFECHO"), quando não há "Conclusão" no título
+      let concLike = -1;
+      if (idxConc < 0 && idxRefs > 0) for (let k = idxRefs - 1; k > Math.max(bodyStart, preEnd, 0); k--) { const t = T(all[k]); if (t && t.length < 100 && /^\d{1,2}\.?\s+[\p{Lu}]/u.test(t) && !/^\d+\.\d/.test(t) && isUpperText(t.replace(/^\d+\.?\s*/, ''))) { concLike = k; break; } }
+      add({ id: 'est-conc', cat: 'estrutura', sec: '3.1.3.3', weight: 'alta', title: 'Conclusão ou considerações finais', status: idxConc >= 0 ? 'ok' : concLike >= 0 ? 'alerta' : 'erro', detail: idxConc >= 0 ? 'Seção de conclusão encontrada.' : concLike >= 0 ? `Não há seção chamada Conclusão ou Considerações finais. A última seção antes das referências é "${clip(T(all[concLike]), 60)}"; se ela retoma os objetivos e apresenta os resultados, faz o papel da conclusão, que o manual nomeia Conclusão.` : 'Não foi encontrada a seção de CONCLUSÃO ou CONSIDERAÇÕES FINAIS antes das referências.', evidence: concLike >= 0 ? [{ where: loc(model, all[concLike]), text: clip(T(all[concLike]), 80), note: 'última seção do texto' }] : undefined });
       // Manual 2.6: só errata, agradecimentos, listas, resumo, sumário, referências, glossário, apêndices, anexos e índices ficam sem número;
       // as seções primárias do texto são numeradas a partir de 1 (o próprio manual usa "1 INTRODUÇÃO")
       const semNumero = [idxIntro, idxConc].filter(i => i >= 0 && all[i]).map(i => all[i]).filter(p => !/^\d+[\s.\-–—)]/.test(T(p)) && !/^CAP[IÍ]TULO\s/i.test(T(p))); // número com sinal errado já é apontado em sec-indicativo
@@ -1951,7 +1956,10 @@ body.na-inicio #avisoBase { display: none; }
       const latin = /\b(apud|ibid\.?|ibidem|id\.|idem|op\.\s?cit\.?|opus citatum|loc\.\s?cit\.?|passim|et seq\.?|cf\.|sic)\b/gi;
       const onlyNotes = /\b(ibid\.?|ibidem|id\.|idem|op\.\s?cit\.?|loc\.\s?cit\.?|passim|cf\.|et seq\.?)/i; // 4.1.2.2.2: todas, menos apud, só em notas
       const inBody = []; const notItal = [];
+      // no PDF, as notas de rodapé vêm misturadas ao texto: parágrafo em fonte menor, rente à margem, é nota (lá essas expressões são permitidas)
+      const pdfNote = (p) => model.kind === 'pdf' && p.sizePt && p.sizePt < bodyFs - 0.6 && (p.indLeftCm || 0) < 1.5;
       for (const p of body) {
+        if (pdfNote(p)) continue;
         const t = p.rawText || T(p); let m;
         latin.lastIndex = 0;
         while ((m = latin.exec(t))) {
@@ -2182,8 +2190,25 @@ body.na-inicio #avisoBase { display: none; }
       // lista numerada [1], (1), 1.: só o número abre uma referência nova
       const numStart = /^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s/;
       const numerada = lines.filter(L => L.first && L.t.length > 20).length >= 3 && lines.filter(L => numStart.test(L.t)).length >= lines.filter(L => L.first && L.t.length > 20).length * 0.5;
-      let cur = null;
+      // lista com linha em branco entre as referências: a linha em branco é o separador; dentro do bloco, nunca se parte
+      const gapAt = (k) => k > 0 && lines[k].pg === lines[k - 1].pg && lines[k].y != null && lines[k - 1].y != null && lines[k].fs ? (lines[k].y - lines[k - 1].y) / lines[k].fs : null;
+      const gaps = lines.map((_, k) => gapAt(k)).filter(g => g != null);
+      const bigN = gaps.filter(g => g > 2.0).length, smallN = gaps.filter(g => g <= 2.0).length;
+      // só vale quando quase toda linha com cara de início de referência vem depois de uma linha em branco
+      const startGaps = lines.map((L, k) => ({ g: gapAt(k), st: startRe.test(L.t) && !notStart.test(L.t) })).filter(x => x.st && x.g != null);
+      const blankStyle = !numerada && bigN >= 8 && startGaps.length >= 8 && startGaps.filter(x => x.g > 2.0).length >= startGaps.length * 0.7;
+      let cur = null; let li = -1;
       for (const L of lines) {
+        li++;
+        if (blankStyle && cur) {
+          const g = gapAt(li); const pageChange = L.pg !== lines[li - 1].pg;
+          // espaço grande também aparece dentro de uma referência (símbolos e índices deslocam a linha): só separa se a linha nova tem cara de início
+          const looksStart = /^[\p{Lu}\[(]/u.test(L.t) && !notStart.test(L.t) && (startRe.test(L.t) || complete(cur.text));
+          const dangling = /(?:\b(?:e|de|da|do|dos|das|em|and|of|the|in|para|com)|[-–,;&])\s*$/i.test(cur.text) && !(g != null && g > 2.0);
+          const brk = looksStart && !dangling && ((g != null && g > 2.0) || (pageChange && startRe.test(L.t)) || (g != null && g > 1.45 && complete(cur.text)));
+          if (brk) { items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; } else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); }
+          continue;
+        }
         if (numerada) { if (!cur || numStart.test(L.t)) { if (cur) items.push(cur); cur = { p: L.p, text: L.t, ls: [L] }; } else { cur.text = (cur.text + ' ' + L.t).replace(/(\p{L})- (\p{Ll})/gu, '$1$2'); cur.ls.push(L); } continue; }
         const isStart = startRe.test(L.t) && !notStart.test(L.t) && !(capsStyle && mixedStart.test(L.t) && !/^[\p{Lu}'’\-]{2,}[,.\s]/u.test(L.t));
         // lista em caixa alta: entrada forte ("SOBRENOME, X" ou "ENTIDADE (SIGLA).") depois de uma referência que já tem ano abre item novo, mesmo sem ponto final na anterior
