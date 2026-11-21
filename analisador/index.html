@@ -180,10 +180,20 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
 .sev.erro { background: var(--bad-soft); color: var(--bad); } .sev.alerta { background: var(--warn-soft); color: var(--warn); } .sev.ok { background: var(--ok-soft); color: var(--ok); } .sev.na { background: var(--azul-claro); color: var(--muted); }
 .sec { font: 600 12.5px var(--sans); color: var(--azul); border: 1px solid var(--azul); padding: 2px 8px; white-space: nowrap; }
 .item p.d { margin: 8px 0 0; font-size: 15.5px; line-height: 1.55; color: var(--texto-2); max-width: 86ch; }
-.item .fix { margin: 10px 0 0; font-size: 15px; color: var(--texto-2); max-width: 86ch; }
-.item .fix b { color: var(--azul); font-weight: 600; }
+.blk { margin-top: 14px; max-width: 92ch; }
+.blk .rot { margin: 0 0 6px; font: 600 12.5px/1.2 var(--sans); letter-spacing: .02em; color: var(--muted); }
+.blk.ajuste p.d { margin: 0; }
+.blk.fix { background: rgba(35, 112, 74, .07); border-left: 3px solid rgba(35, 112, 74, .55); padding: 11px 14px 12px; }
+.blk.fix .rot { color: var(--ok); }
+.blk.fix p:last-child { margin: 0; font-size: 15px; line-height: 1.55; color: var(--texto); }
 .ev { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.blk .ev, .blk details .ev { margin-top: 0; }
+.blk details .ev { margin-top: 6px; }
 .ev li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; font-size: 13.5px; padding: 9px 12px; background: var(--azul-claro); }
+.achado .rot { color: var(--bad); }
+.achado .ev li { background: rgba(173, 42, 31, .06); box-shadow: inset 2px 0 0 rgba(173, 42, 31, .35); }
+.item.alerta .achado .rot { color: #8a6412; }
+.item.alerta .achado .ev li { background: rgba(183, 134, 26, .08); box-shadow: inset 2px 0 0 rgba(183, 134, 26, .45); }
 .ev .w { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ev .t { font-family: var(--serif); font-size: 15px; line-height: 1.45; color: var(--texto); word-break: break-word; }
 .ev .nt { display: block; font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--bad); margin-top: 3px; }
@@ -2305,14 +2315,17 @@ body.na-inicio #avisoBase { display: none; }
 
   function itemHTML(c, compact) {
     const ev = c.evidence || [];
+    const full = !compact && c.status !== 'ok';
     const evHtml = ev.length && !compact ? `<ul class="ev">${ev.slice(0, 4).map(evLi).join('')}</ul>${ev.length > 4 ? `<details class="more"><summary>Mostrar mais ${ev.length - 4} ocorrência(s)</summary><ul class="ev">${ev.slice(4).map(evLi).join('')}</ul></details>` : ''}` : '';
+    // ordem de leitura: o problema, onde ele aparece, o ajuste e como corrigir
+    const det = full ? String(c.detail || '').replace(/^Ajustes?:\s*(.)/i, (_, x) => x.toLocaleUpperCase('pt-BR')) : c.detail;
     return `<article class="item ${c.status}">
       <div>
         <div class="item-h"><h4>${esc(c.title)}</h4><span class="sec">Manual § ${esc(c.sec)}</span><span class="sev ${c.status}">${SEV[c.status]}</span></div>
-        <p class="d">${esc(c.detail)}</p>
-        ${!compact && c.fix && c.status !== 'ok' ? `<p class="fix"><b>Como corrigir:</b> ${esc(c.fix)}</p>` : ''}
-        ${evHtml}
-        ${c.approx && !compact && c.status !== 'ok' ? '<p class="approx">Medida estimada a partir do PDF. Confira no arquivo original.</p>' : ''}
+        ${full && evHtml ? `<div class="blk achado"><p class="rot">Encontrado no trabalho</p>${evHtml}</div>` : (compact ? '' : evHtml)}
+        ${full ? `<div class="blk ajuste"><p class="rot">O que ajustar</p><p class="d">${esc(det)}</p></div>` : `<p class="d">${esc(c.detail)}</p>`}
+        ${full && c.fix ? `<div class="blk fix"><p class="rot">Como corrigir</p><p>${esc(c.fix)}</p></div>` : ''}
+        ${c.approx && full ? '<p class="approx">Medida estimada a partir do PDF. Confira no arquivo original.</p>' : ''}
         ${c.ai ? '<p class="approx">Apontado pela revisão com IA.</p>' : ''}
       </div></article>`;
   }
@@ -2512,23 +2525,47 @@ Use "erro" para falha clara de requisito, "alerta" para falha parcial ou dúvida
     sectionTitle('Inconformidades e pontos de atenção', issues.length);
     let lastCat = null;
     for (const c of issues) {
-      if (c.cat !== lastCat) { ensure(14); lastCat = c.cat; doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); col(C.muted); text(sc.byCat[c.cat].name.toUpperCase(), L, y + 2); y += 6; }
-      const titleL = wrap(c.title, CW - 62);
-      const detL = wrap(c.detail, CW - 6);
-      const fixL = c.fix ? wrap('Como corrigir: ' + c.fix, CW - 6) : [];
-      const evs = (c.evidence || []).slice(0, 6).map(e => wrap(`${e.where ? e.where + '  ' : ''}${e.text}${e.note ? '  (' + e.note + ')' : ''}`, CW - 12));
-      const hh = titleL.length * 4.6 + detL.length * 4.1 + fixL.length * 4.1 + evs.reduce((a, l) => a + l.length * 3.7 + 1.2, 0) + 9;
+      if (c.cat !== lastCat) { ensure(40); lastCat = c.cat; doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); col(C.muted); text(sc.byCat[c.cat].name.toUpperCase(), L, y + 2); y += 6; }
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); const secW0 = doc.getTextWidth('§ ' + c.sec); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); const sevW0 = doc.getTextWidth(c.status === 'erro' ? 'INCONFORMIDADE' : 'ATENÇÃO'); doc.setFontSize(10.5);
+      const titleL = wrap(c.title, CW - 9 - secW0 - sevW0 - 8);
+      const detL = wrap(String(c.detail || '').replace(/^Ajustes?:\s*(.)/i, (_, x) => x.toLocaleUpperCase('pt-BR')), CW - 8);
+      const fixL = c.fix ? wrap(c.fix, CW - 14) : [];
+      const evs = (c.evidence || []).slice(0, 6).map(e => ({ w: e.where || '', l: wrap(`${e.text}${e.note ? '  (' + e.note + ')' : ''}`, CW - 34) }));
+      const hh = titleL.length * 4.6 + detL.length * 4.1 + fixL.length * 4.1 + evs.reduce((a, e) => a + e.l.length * 3.7 + 3.4, 0) + 28;
       ensure(Math.min(hh, 90));
       const top = y;
       const sc2 = c.status === 'erro' ? C.bad : C.warn;
+      // tons suaves: vermelho (ou âmbar) para o trecho encontrado, verde para a correção
+      const tint = c.status === 'erro' ? [251, 236, 234] : [251, 244, 226], tintRule = c.status === 'erro' ? [214, 150, 144] : [222, 190, 120];
+      const label = (s, cc) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(7.8); col(cc); text(s, L + 5, y + 3); y += 4.6; doc.setFont('helvetica', 'normal'); };
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); col(C.ink); doc.text(titleL, L + 5, y + 4);
       doc.setFontSize(7.5); col(sc2); const sevT = c.status === 'erro' ? 'INCONFORMIDADE' : 'ATENÇÃO'; text(sevT, R, y + 4, { align: 'right' });
       const sevW = doc.getTextWidth(sevT); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); col(C.accent); text('§ ' + c.sec, R - sevW - 4, y + 4, { align: 'right' });
-      y += titleL.length * 4.6 + 1.5;
+      y += titleL.length * 4.6 + 2.5;
+      if (evs.length) {
+        ensure(10); label('Encontrado no trabalho', sc2);
+        doc.setFontSize(8.3);
+        for (const e of evs) {
+          const bh = e.l.length * 3.7 + 2.4; ensure(bh + 1);
+          doc.setFillColor(...tint); doc.rect(L + 5, y, CW - 5, bh, 'F');
+          doc.setFillColor(...tintRule); doc.rect(L + 5, y, 0.6, bh, 'F');
+          col(C.muted); doc.setFont('helvetica', 'bold'); text(e.w, L + 8, y + 3.6); doc.setFont('helvetica', 'normal');
+          col(C.ink); e.l.forEach((l, k) => doc.text(l, L + 30, y + 3.6 + k * 3.7));
+          y += bh + 1;
+        }
+        if ((c.evidence || []).length > 6) { doc.setFontSize(8); col(C.muted); text(`e mais ${(c.evidence.length - 6)} ocorrência(s)`, L + 8, y + 3); y += 4; }
+        y += 1.5;
+      }
+      ensure(10); label('O que ajustar', C.muted);
       doc.setFontSize(9.3); col(C.ink); for (const l of detL) { ensure(5); doc.text(l, L + 5, y + 3); y += 4.1; }
-      if (fixL.length) { col(C.muted); for (const l of fixL) { ensure(5); doc.text(l, L + 5, y + 3); y += 4.1; } }
-      if (evs.length) { y += 1; doc.setFontSize(8.3); for (const ls of evs) { for (const l of ls) { ensure(4.5); col(C.muted); doc.text(l, L + 9, y + 3); y += 3.7; } y += 1.2; } }
-      if ((c.evidence || []).length > 6) { doc.setFontSize(8); col(C.muted); text(`e mais ${(c.evidence.length - 6)} ocorrência(s)`, L + 9, y + 3); y += 4; }
+      if (fixL.length) {
+        y += 2; const bh = fixL.length * 4.1 + 8.6; ensure(bh + 1);
+        doc.setFillColor(234, 244, 238); doc.rect(L + 5, y, CW - 5, bh, 'F');
+        doc.setFillColor(140, 190, 160); doc.rect(L + 5, y, 0.6, bh, 'F');
+        y += 1.4; const x0 = L; doc.setFont('helvetica', 'bold'); doc.setFontSize(7.8); col(C.ok); text('Como corrigir', x0 + 9, y + 3); y += 4.6;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.3); col(C.ink); for (const l of fixL) { doc.text(l, x0 + 9, y + 3); y += 4.1; }
+        y += 2.6;
+      }
       if (c.ai) { doc.setFontSize(8); col(C.accent); text('Apontado pela revisão com IA', L + 5, y + 3); y += 4; }
       doc.setDrawColor(...sc2); doc.setLineWidth(1); doc.line(L + 1, Math.max(top, 22), L + 1, y + 1); doc.setLineWidth(0.3);
       y += 5;
