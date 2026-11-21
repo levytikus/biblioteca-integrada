@@ -1061,6 +1061,10 @@ body.na-inicio #avisoBase { display: none; }
 
   /* ======================================================= */
   function analyze(model, opts) {
+    // hífens tipográficos (U+2010, U+2011) valem como hífen comum: VELASCO‐BENÍTEZ = VELASCO-BENÍTEZ
+    const HY = /[\u2010\u2011]/g;
+    for (const p of model.paras || []) { if (p.text) p.text = p.text.replace(HY, '-'); if (p.rawText) p.rawText = p.rawText.replace(HY, '-'); for (const l of p.lines || []) if (l.text) l.text = l.text.replace(HY, '-'); for (const r of p.runs || []) if (r.text) r.text = r.text.replace(HY, '-'); }
+    for (const f of model.footnotes || []) for (const fp of f.paras || []) { if (fp.text) fp.text = fp.text.replace(HY, '-'); if (fp.rawText) fp.rawText = fp.rawText.replace(HY, '-'); }
     opts = opts || {};
     const P = model.paras.filter(p => !p.isTableEnd);
     const all = model.paras;
