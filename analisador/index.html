@@ -172,6 +172,34 @@ h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(30px, 3.4vw, 4
 .tab[aria-selected="true"] { color: #fff; background: var(--azul); }
 .tab .n { font-variant-numeric: tabular-nums; margin-left: 6px; font-weight: 500; opacity: .85; }
 .group-h { font: 600 13px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 30px 0 12px; display: flex; justify-content: space-between; gap: 12px; }
+.tab { position: relative; }
+.tab .bolinha { position: absolute; top: 9px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 2px var(--fundo, #f6f8fb); }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-bottom: 0; overflow: visible; }
+  .tab { padding: 12px 12px; font-size: 14.5px; text-align: left; background: var(--branco); border: 1px solid var(--linha); white-space: normal; }
+  .tab[aria-selected="true"] { border-color: var(--azul); }
+  .tab .bolinha { top: 7px; right: 7px; }
+}
+.tab.novo { color: var(--texto); }
+.grupo { border-bottom: 1px solid var(--linha); }
+.grupo-h { margin: 0; }
+.grupo-h button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 18px 4px; cursor: pointer; font: 600 15.5px/1.3 var(--sans); color: var(--texto-2); }
+.grupo-h button:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.grupo-h .gn { flex: 1; }
+.grupo-h .gc { min-width: 26px; padding: 2px 8px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; background: var(--azul-claro); color: var(--azul); }
+.grupo-h .seta { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform .2s ease; }
+.grupo.aberto .grupo-h button { color: var(--azul); }
+.grupo.aberto .grupo-h .gc { background: var(--azul); color: #fff; }
+.grupo.aberto .grupo-h .seta { transform: rotate(-135deg) translateY(-1px); border-color: var(--azul); }
+.grupo:not(.aberto) .grupo-h button:hover { color: var(--azul); }
+.grupo-c { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+.grupo.aberto .grupo-c { grid-template-rows: 1fr; }
+.grupo-in { overflow: hidden; min-height: 0; }
+.grupo.aberto .grupo-in { padding-bottom: 18px; }
+.ponte { margin-top: 26px; padding: 18px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; background: rgba(183, 134, 26, .08); border-left: 3px solid rgba(183, 134, 26, .55); }
+.ponte p { margin: 0; flex: 1; min-width: 220px; font-size: 15px; color: var(--texto); }
+.botao-linha { border: 1px solid var(--azul); background: var(--branco); color: var(--azul); padding: 10px 16px; font: 600 14.5px var(--sans); cursor: pointer; }
+.botao-linha:hover { background: var(--azul-claro); }
 .item { background: var(--branco); border: 1px solid var(--linha); border-left: 4px solid var(--muted); padding: 18px 20px; margin-bottom: 10px; }
 .item.erro { border-left-color: var(--bad); } .item.alerta { border-left-color: #b7861a; } .item.ok { border-left-color: var(--ok); }
 .item-h { display: flex; gap: 8px 14px; align-items: baseline; flex-wrap: wrap; }
@@ -2233,7 +2261,10 @@ body.na-inicio #avisoBase { display: none; }
   /* ---------- relatório ---------- */
   const SEV = { erro: 'Inconformidade', alerta: 'Atenção', ok: 'Em conformidade', na: 'Não verificado' };
   const WT = { alta: 3, media: 2, baixa: 1 };
-  let tab = 'bad';
+  // abas: cada uma mostra uma bolinha enquanto tiver itens que a pessoa ainda não abriu
+  const TABS = [['bad', 'Inconformidades'], ['warn', 'Pontos de atenção'], ['ok', 'Em conformidade'], ['na', 'Não verificados']];
+  const TAB_FILTER = { bad: c => c.status === 'erro', warn: c => c.status === 'alerta', ok: c => c.status === 'ok', na: c => c.status === 'na' };
+  const tabCount = (t) => state.allChecks.filter(TAB_FILTER[t]).length;
 
   function verdict(p, nBad) {
     if (p >= 95 && !nBad) return ['Pronto para a entrega', 'O trabalho atende às regras verificadas. Revise os pontos de atenção, se houver, antes do depósito.'];
@@ -2298,17 +2329,16 @@ body.na-inicio #avisoBase { display: none; }
         </div>
         <button class="botao" id="aiBtn" type="button">${state.ai ? 'Revisar de novo' : 'Revisar conteúdo com IA'}</button>
       </div>
-      <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-t="bad" aria-selected="${tab === 'bad'}">Inconformidades<span class="n">${bad.length + warn.length}</span></button>
-        <button class="tab" role="tab" data-t="ok" aria-selected="${tab === 'ok'}">Em conformidade<span class="n">${ok.length}</span></button>
-        ${na.length ? `<button class="tab" role="tab" data-t="na" aria-selected="${tab === 'na'}">Não verificados<span class="n">${na.length}</span></button>` : ''}
-      </div>
-      <div id="list"></div>`;
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div id="list" role="tabpanel"></div>`;
+    if (!state.seen) state.seen = {};
+    if (!state.open) state.open = {};
+    if (!state.tab) state.tab = bad.length ? 'bad' : warn.length ? 'warn' : 'ok';
     renderList();
     $('#startView').classList.add('hide'); $('#report').classList.add('show'); document.body.classList.remove('na-inicio');
     $('#again').addEventListener('click', goStart);
     $('#dlPdf').addEventListener('click', downloadPdf);
-    document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.t; document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b)); renderList(); }));
+    $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) goTab(b.dataset.t); });
     setupAI();
     window.scrollTo(0, 0);
   }
@@ -2331,23 +2361,47 @@ body.na-inicio #avisoBase { display: none; }
   }
   function evLi(e) { return `<li><span class="w">${esc(e.where || '')}</span><span class="t">${esc(e.text)}${e.note ? `<span class="nt">${esc(e.note)}</span>` : ''}</span></li>`; }
 
+  function goTab(t) { state.tab = t; renderList(); }
+  function renderTabs() {
+    const el = $('#tabs'); if (!el) return;
+    el.innerHTML = TABS.map(([t, nome]) => {
+      const n = tabCount(t);
+      if (t === 'na' && !n) return '';
+      const novo = n > 0 && t !== state.tab && n > (state.seen[t] || 0);
+      return `<button class="tab${novo ? ' novo' : ''}" role="tab" data-t="${t}" aria-selected="${t === state.tab}">${nome}<span class="n">${n}</span>${novo ? '<span class="bolinha" aria-label="itens ainda não vistos"></span>' : ''}</button>`;
+    }).join('');
+  }
   function renderList() {
-    const checks = state.allChecks; const cats = state.score.byCat;
-    let html = '';
-    const groups = (filter, sort, compact) => {
-      let out = '';
-      for (const k of Object.keys(cats)) {
-        const items = checks.filter(c => c.cat === k && filter(c)).sort(sort);
-        if (!items.length) continue;
-        out += `<h3 class="group-h"><span>${esc(cats[k].name)}</span><span>${items.length}</span></h3>` + items.map(c => itemHTML(c, compact)).join('');
-      }
-      return out;
+    const checks = state.allChecks; const cats = state.score.byCat; const t = state.tab;
+    state.seen[t] = tabCount(t);
+    renderTabs();
+    const compact = t === 'ok' || t === 'na';
+    const sort = t === 'bad' || t === 'warn' ? (a, b) => (WT[b.weight] || 2) - (WT[a.weight] || 2) : () => 0;
+    const grupos = Object.keys(cats).map(k => ({ k, nome: cats[k].name, itens: checks.filter(c => c.cat === k && TAB_FILTER[t](c)).sort(sort) })).filter(g => g.itens.length);
+    // sanfona: sempre uma seção aberta por aba
+    if (!grupos.some(g => g.k === state.open[t])) state.open[t] = grupos.length ? grupos[0].k : null;
+    let html = grupos.map(g => {
+      const aberto = g.k === state.open[t];
+      return `<section class="grupo${aberto ? ' aberto' : ''}" data-k="${g.k}">
+        <h3 class="grupo-h"><button type="button" aria-expanded="${aberto}" aria-controls="g-${t}-${g.k}"><span class="gn">${esc(g.nome)}</span><span class="gc">${g.itens.length}</span><span class="seta" aria-hidden="true"></span></button></h3>
+        <div class="grupo-c" id="g-${t}-${g.k}"><div class="grupo-in"${aberto ? '' : ' inert'}>${g.itens.map(c => itemHTML(c, compact)).join('')}</div></div>
+      </section>`;
+    }).join('');
+    if (!grupos.length) html = `<p class="empty">${{ bad: 'Nenhuma inconformidade encontrada nas regras verificadas.', warn: 'Nenhum ponto de atenção.', ok: 'Nenhum item em conformidade.', na: 'Todos os itens foram verificados.' }[t]}</p>`;
+    const nWarn = tabCount('warn');
+    if (t === 'bad' && nWarn) html += `<div class="ponte"><p>Há ${nWarn} ${nWarn === 1 ? 'ponto' : 'pontos'} de atenção para conferir. Não são erros certos, mas pedem uma olhada.</p><button type="button" class="botao-linha" data-ir="warn">Ver pontos de atenção</button></div>`;
+    const list = $('#list');
+    list.className = compact ? 'ok-list' : '';
+    list.innerHTML = html;
+    list.onclick = (e) => {
+      const ir = e.target.closest('[data-ir]'); if (ir) { goTab(ir.dataset.ir); { const cab = document.querySelector('.cab'); const off = (cab ? cab.getBoundingClientRect().bottom : 0) + 12; window.scrollTo({ top: scrollY + $('#tabs').getBoundingClientRect().top - off, behavior: 'smooth' }); } return; }
+      const b = e.target.closest('.grupo-h button'); if (!b) return;
+      const sec = b.closest('.grupo'); if (sec.classList.contains('aberto')) return;
+      state.open[t] = sec.dataset.k;
+      list.querySelectorAll('.grupo').forEach(g => { const on = g === sec; g.classList.toggle('aberto', on); g.querySelector('.grupo-h button').setAttribute('aria-expanded', on); g.querySelector('.grupo-in').toggleAttribute('inert', !on); });
+      // mantém o título da seção aberta à vista depois que a anterior se recolhe
+      setTimeout(() => { const cab = document.querySelector('.cab'); const off = (cab && getComputedStyle(cab).position !== 'static' ? cab.getBoundingClientRect().bottom : 0) + 12; const r = sec.getBoundingClientRect(); if (r.top < off || r.top > innerHeight * 0.6) window.scrollTo({ top: scrollY + r.top - off, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }, 260);
     };
-    const bySev = (a, b) => (a.status === 'erro' ? 0 : 1) - (b.status === 'erro' ? 0 : 1) || (WT[b.weight] || 2) - (WT[a.weight] || 2);
-    if (tab === 'bad') html = groups(c => c.status === 'erro' || c.status === 'alerta', bySev) || '<p class="empty">Nenhuma inconformidade encontrada nas regras verificadas.</p>';
-    else if (tab === 'ok') html = `<div class="ok-list">${groups(c => c.status === 'ok', () => 0, true) || '<p class="empty">Nenhum item em conformidade.</p>'}</div>`;
-    else html = groups(c => c.status === 'na', () => 0, true);
-    $('#list').innerHTML = html;
   }
 
   /* ---------- IA ---------- */
