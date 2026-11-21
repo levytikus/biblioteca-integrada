@@ -1,0 +1,70 @@
+{
+ "arquivo": "E5.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "erro",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "erro",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "alerta",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "ok",
+  "est-agradec": "ok",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "alerta",
+  "est-conc": "alerta",
+  "est-refs": "erro",
+  "sec-indicativo": "erro",
+  "sec-sequencia": "ok",
+  "sec-destaque": "ok",
+  "sec-folha": "ok",
+  "sec-semnumero": "erro",
+  "sec-sumario": "ok",
+  "sec-sumario-pos": "ok",
+  "ilu-identificacao": "alerta",
+  "ilu-fonte": "ok",
+  "ele-siglas": "ok",
+  "cit-sistema": "ok",
+  "cit-grafia": "ok",
+  "cit-pagina": "ok",
+  "cit-longa-inline": "alerta",
+  "cit-longa": "erro",
+  "cit-refs": "alerta",
+  "ref-entrada": "erro",
+  "ref-ordem": "erro",
+  "ref-ponto": "alerta",
+  "ref-pp": "erro",
+  "ref-espaco": "alerta"
+ },
+ "evidencias": {
+  "ref-ordem": {
+   "contem": [
+    "Godelier",
+    "Pitt-Rivers"
+   ],
+   "nao_contem": [
+    "Departamento de Antropologia",
+    "Brasília, DF: IEB"
+   ]
+  },
+  "est-intro": {
+   "contem": [
+    "ABERTURA"
+   ]
+  },
+  "est-conc": {
+   "contem": [
+    "DESFECHO"
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 5): referências separadas por linha em branco; citações nas notas de rodapé."
+}

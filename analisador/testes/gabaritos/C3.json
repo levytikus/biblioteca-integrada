@@ -1,0 +1,71 @@
+{
+ "arquivo": "C3.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "erro",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "ok",
+  "fmt-pag-pre": "erro",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "alerta",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "ok",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "erro",
+  "est-agradec": "erro",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "erro",
+  "sec-textual-num": "erro",
+  "est-refs": "erro",
+  "sec-indicativo": "ok",
+  "sec-sequencia": "ok",
+  "sec-destaque": "ok",
+  "sec-folha": "ok",
+  "sec-semnumero": "ok",
+  "sec-sumario": "ok",
+  "sec-sumario-pos": "ok",
+  "ilu-identificacao": "erro",
+  "ilu-fonte": "erro",
+  "ele-siglas": "erro",
+  "cit-sistema": "ok",
+  "cit-pagina": "ok",
+  "cit-longa-inline": "ok",
+  "ref-entrada": "erro",
+  "ref-ordem-num": "ok",
+  "ref-ponto": "alerta",
+  "ref-espaco": "erro"
+ },
+ "evidencias": {
+  "fmt-pag-pre": {
+   "contem": [
+    "algarismos romanos"
+   ]
+  },
+  "ele-siglas": {
+   "nao_contem": [
+    "SU (d)",
+    "separated into HS"
+   ]
+  },
+  "ilu-identificacao": {
+   "contem": [
+    "numeradas por capítulo"
+   ]
+  },
+  "ref-ponto": {
+   "contem": [
+    "backref"
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 3): tese em LaTeX, em inglês."
+}

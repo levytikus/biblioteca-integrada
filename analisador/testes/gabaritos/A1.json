@@ -1,0 +1,108 @@
+{
+ "arquivo": "A1.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "erro",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "ok",
+  "fmt-pag-pre": "alerta",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "alerta",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "alerta",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "ok",
+  "est-agradec": "ok",
+  "est-siglas-ordem": "erro",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "ok",
+  "sec-textual-num": "erro",
+  "est-refs": "ok",
+  "est-apendice": "erro",
+  "sec-capitulo": "alerta",
+  "sec-indicativo": "erro",
+  "sec-sequencia": "erro",
+  "sec-destaque": "ok",
+  "sec-folha": "erro",
+  "sec-semnumero": "erro",
+  "sec-sumario": "erro",
+  "sec-sumario-pos": "erro",
+  "ilu-identificacao": "erro",
+  "ilu-fonte": "erro",
+  "ele-siglas": "alerta",
+  "cit-sistema": "ok",
+  "cit-grafia": "erro",
+  "cit-ponto-virgula": "erro",
+  "cit-pagina": "erro",
+  "cit-longa-inline": "alerta",
+  "cit-longa": "erro",
+  "cit-latinas-notas": "erro",
+  "cit-p": "alerta",
+  "cit-refs": "erro",
+  "ref-entrada": "alerta",
+  "ref-ordem": "erro",
+  "ref-online": "erro",
+  "ref-datas": "erro",
+  "ref-ano-acesso": "alerta",
+  "ref-ano": "erro",
+  "ref-ponto": "alerta",
+  "ref-autores": "erro",
+  "ref-espaco": "alerta"
+ },
+ "evidencias": {
+  "sec-sumario": {
+   "nao_contem": [
+    "4.3 Do apagamento"
+   ]
+  },
+  "sec-sequencia": {
+   "contem": [
+    "esperado 4.3.1",
+    "falta a seção 1"
+   ]
+  },
+  "est-apendice": {
+   "contem": [
+    "de J pula para L"
+   ]
+  },
+  "cit-refs": {
+   "nao_contem": [
+    "Paiva, 2012",
+    "Balaiada",
+    "Holandeses",
+    "Contudo",
+    "Del Priore"
+   ]
+  },
+  "ilu-identificacao": {
+   "nao_contem": [
+    "fora da sequência"
+   ]
+  },
+  "sec-textual-num": {
+   "contem": [
+    "INTRODUÇÃO",
+    "Considerações finais"
+   ]
+  },
+  "ref-ano": {
+   "contem": [
+    "FUNDO BRASIL"
+   ],
+   "nao_contem": [
+    "PAIVA"
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 1). Erro conhecido em aberto: a legenda da Figura 7 está no meio de uma linha e não é lida, então a Figura 8 aparece fora de sequência (alarme falso)."
+}

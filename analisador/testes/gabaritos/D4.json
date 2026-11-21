@@ -1,0 +1,98 @@
+{
+ "arquivo": "D4.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "ok",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "ok",
+  "fmt-pag-pre": "ok",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "ok",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "erro",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "ok",
+  "est-agradec": "ok",
+  "est-siglas-ordem": "erro",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "ok",
+  "sec-textual-num": "erro",
+  "est-refs": "ok",
+  "est-apendice": "ok",
+  "sec-capitulo": "alerta",
+  "sec-indicativo": "erro",
+  "sec-sequencia": "erro",
+  "sec-destaque": "erro",
+  "sec-folha": "erro",
+  "sec-semnumero": "erro",
+  "sec-sumario": "ok",
+  "sec-sumario-pos": "ok",
+  "ilu-identificacao": "alerta",
+  "ilu-fonte": "ok",
+  "ele-siglas": "alerta",
+  "cit-sistema": "ok",
+  "cit-grafia": "erro",
+  "cit-ponto-virgula": "erro",
+  "cit-pagina": "erro",
+  "cit-longa-inline": "alerta",
+  "cit-longa": "erro",
+  "cit-latinas-notas": "erro",
+  "cit-p": "erro",
+  "cit-refs": "erro",
+  "ref-entrada": "erro",
+  "ref-ordem": "erro",
+  "ref-online": "erro",
+  "ref-datas": "erro",
+  "ref-ano-acesso": "alerta",
+  "ref-ponto": "alerta",
+  "ref-pp": "erro",
+  "ref-espaco": "alerta"
+ },
+ "evidencias": {
+  "sec-sumario": {
+   "nao_contem": [
+    "Contextualização",
+    "3.1"
+   ]
+  },
+  "sec-folha": {
+   "nao_contem": [
+    "É possível renunciar"
+   ]
+  },
+  "sec-sequencia": {
+   "contem": [
+    "volta a 1 depois de 4"
+   ]
+  },
+  "ref-ordem": {
+   "contem": [
+    "Associação de Jornalismo",
+    "Costigan",
+    "Samuel",
+    "Quintais"
+   ],
+   "nao_contem": [
+    "Geociências",
+    "Towse",
+    "HÉLICES",
+    "Revista do Direito"
+   ]
+  },
+  "cit-latinas-notas": {
+   "contem": [
+    "Gitelman (ibid."
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 4)."
+}

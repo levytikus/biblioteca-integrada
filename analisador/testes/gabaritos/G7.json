@@ -1,0 +1,84 @@
+{
+ "arquivo": "G7.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "ok",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "ok",
+  "fmt-pag-pre": "ok",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "ok",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "erro",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "ok",
+  "est-agradec": "ok",
+  "est-siglas-ordem": "erro",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "ok",
+  "sec-textual-num": "ok",
+  "est-refs": "ok",
+  "est-apendice": "erro",
+  "sec-indicativo": "ok",
+  "sec-sequencia": "ok",
+  "sec-destaque": "ok",
+  "sec-folha": "ok",
+  "sec-semnumero": "erro",
+  "sec-sumario": "alerta",
+  "sec-sumario-pos": "ok",
+  "sec-alineas": "erro",
+  "ilu-identificacao": "alerta",
+  "ilu-fonte": "erro",
+  "ele-siglas": "alerta",
+  "cit-sistema": "ok",
+  "cit-grafia": "erro",
+  "cit-pagina": "erro",
+  "cit-longa-inline": "ok",
+  "cit-longa": "ok",
+  "cit-p": "alerta",
+  "cit-refs": "alerta",
+  "ref-entrada": "alerta",
+  "ref-ordem": "erro",
+  "ref-online": "erro",
+  "ref-datas": "erro",
+  "ref-ano-acesso": "alerta",
+  "ref-ano": "erro",
+  "ref-ponto": "alerta",
+  "ref-autores": "erro",
+  "ref-pp": "erro"
+ },
+ "evidencias": {
+  "cit-refs": {
+   "nao_contem": [
+    "Wischmeier"
+   ]
+  },
+  "ele-siglas": {
+   "nao_contem": [
+    "TPI |",
+    "TMMMF |",
+    "ETP |"
+   ]
+  },
+  "ilu-identificacao": {
+   "nao_contem": [
+    "fora da sequência"
+   ]
+  },
+  "ref-ordem": {
+   "contem": [
+    "DIAS"
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 7)."
+}

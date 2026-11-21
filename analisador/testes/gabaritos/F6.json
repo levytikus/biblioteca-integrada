@@ -1,0 +1,85 @@
+{
+ "arquivo": "F6.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "ok",
+  "fmt-fonte": "ok",
+  "fmt-espaco": "ok",
+  "fmt-pag": "ok",
+  "fmt-pag-pre": "ok",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "ok",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "erro",
+  "est-resumo-par": "ok",
+  "est-kw": "alerta",
+  "est-abstract": "ok",
+  "est-sumario": "ok",
+  "est-ordem": "erro",
+  "est-agradec": "ok",
+  "est-siglas-ordem": "erro",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "ok",
+  "sec-textual-num": "erro",
+  "est-refs": "ok",
+  "sec-capitulo": "alerta",
+  "sec-indicativo": "ok",
+  "sec-sequencia": "ok",
+  "sec-destaque": "ok",
+  "sec-folha": "ok",
+  "sec-semnumero": "erro",
+  "sec-sumario": "erro",
+  "sec-sumario-pos": "ok",
+  "ele-siglas": "alerta",
+  "cit-sistema": "ok",
+  "cit-grafia": "ok",
+  "cit-ponto-virgula": "erro",
+  "cit-datas-ordem": "alerta",
+  "cit-pagina": "erro",
+  "cit-longa-inline": "alerta",
+  "cit-longa": "erro",
+  "cit-latinas-notas": "erro",
+  "cit-p": "erro",
+  "cit-refs": "alerta",
+  "ref-entrada": "alerta",
+  "ref-ordem": "erro",
+  "ref-online": "erro",
+  "ref-datas": "erro",
+  "ref-ano-acesso": "alerta",
+  "ref-ano": "erro",
+  "ref-ponto": "alerta",
+  "ref-pp": "erro",
+  "ref-espaco": "alerta"
+ },
+ "evidencias": {
+  "sec-sumario": {
+   "nao_contem": [
+    "ausente do sumário"
+   ]
+  },
+  "ref-entrada": {
+   "nao_contem": [
+    "McNALLY"
+   ]
+  },
+  "ref-ano-acesso": {
+   "contem": [
+    "BANNERJI"
+   ]
+  },
+  "ref-ordem": {
+   "contem": [
+    "ARRUZA",
+    "CÈSAIRE",
+    "McNALLY",
+    "NUNES, J."
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 6)."
+}

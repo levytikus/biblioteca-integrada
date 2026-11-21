@@ -1778,6 +1778,7 @@ body.na-inicio #avisoBase { display: none; }
           const tail = t.slice(m.index + m[0].length, m.index + m[0].length + 12), head = t.slice(Math.max(0, m.index - 140), m.index);
           // "“TMMMF” é a temperatura média...": a sigla é explicada logo em seguida
           if (/^[”"]?\s(?:é|são|significa|refere-se|corresponde|representa|indica)\s(?:a|o|as|os|à|ao)?\s?[\p{Ll}]/u.test(tail + t.slice(m.index + m[0].length + 12, m.index + m[0].length + 40))) { seen.set(s, true); continue; }
+          if (/[“"]$/.test(head) && /^[”"]\s(?:a|o|as|os)\s[\p{Ll}]/u.test(tail)) { seen.set(s, true); continue; } // "“ETP” a evapotranspiração..."
           // "(Topographic Position Index – TPI)": forma completa e sigla juntas no mesmo parêntese = sigla definida
           if (/\([^()]{3,140}\s[–—-]\s?$/.test(head) && /^\s?\)/.test(tail)) { seen.set(s, true); continue; }
           if (/^[-–]\s?[A-Z\d]/.test(tail) || /[-–]\s?$/.test(head.slice(-2))) continue; // SARS-CoV, EM- DAT

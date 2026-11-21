@@ -1,0 +1,76 @@
+{
+ "arquivo": "B2.pdf",
+ "conferido": "2026-11-21",
+ "itens": {
+  "fmt-a4": "ok",
+  "fmt-margens": "ok",
+  "fmt-fonte": "alerta",
+  "fmt-espaco": "ok",
+  "fmt-pag": "alerta",
+  "est-capa": "ok",
+  "est-rosto": "ok",
+  "est-rosto-nat": "ok",
+  "est-ficha": "ok",
+  "est-aprov": "ok",
+  "est-resumo": "ok",
+  "est-resumo-tam": "ok",
+  "est-resumo-par": "ok",
+  "est-kw": "erro",
+  "est-abstract": "alerta",
+  "est-sumario": "ok",
+  "est-ordem": "ok",
+  "est-agradec": "ok",
+  "est-sumario-ultimo": "ok",
+  "est-intro": "ok",
+  "est-conc": "ok",
+  "sec-textual-num": "ok",
+  "est-refs": "ok",
+  "sec-indicativo": "erro",
+  "sec-sequencia": "erro",
+  "sec-destaque": "ok",
+  "sec-folha": "ok",
+  "sec-semnumero": "erro",
+  "sec-sumario": "erro",
+  "sec-sumario-pos": "ok",
+  "ilu-identificacao": "alerta",
+  "ilu-fonte": "erro",
+  "ele-siglas": "alerta",
+  "cit-sistema": "ok",
+  "cit-grafia": "erro",
+  "cit-ponto-virgula": "erro",
+  "cit-pagina": "ok",
+  "cit-longa-inline": "ok",
+  "cit-refs": "alerta",
+  "ref-entrada": "alerta",
+  "ref-ordem": "erro",
+  "ref-online": "erro",
+  "ref-ano": "erro",
+  "ref-espaco": "alerta"
+ },
+ "evidencias": {
+  "ref-ordem": {
+   "nao_contem": [
+    "NAR, D. C."
+   ]
+  },
+  "cit-refs": {
+   "nao_contem": [
+    "1573"
+   ]
+  },
+  "ele-siglas": {
+   "nao_contem": [
+    "EC |",
+    "BG |",
+    "XR |",
+    "ST |"
+   ]
+  },
+  "sec-sumario": {
+   "contem": [
+    "no texto este título é 2.2"
+   ]
+  }
+ },
+ "notas": "Conferida no PDF (rodada 2). Erro conhecido em aberto: 'ST' (Sorvall ST 16R, código no parágrafo seguinte) ainda aparece como sigla."
+}
