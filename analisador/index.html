@@ -1109,7 +1109,7 @@ body.na-inicio #avisoBase { display: none; }
       let big = '', marks = [];
       for (const b of buf) { marks.push({ at: big.length, p: b.p }); big += b.t + ' '; }
       const LEAD = '(?:(?:\\.\\s?){2,}|…+|_{2,}|[-–—]{2,}|\\s-\\s*p\\.|\\s-)';
-      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:(?:\\.\\s?){3,}|[-–—]{3,})\\s*(?:\\d{1,4}\\s+)?(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|(?<!CAP[IÍ]TULO)\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
+      const reCut = new RegExp(LEAD + '\\s*(?:p\\.\\s*)?\\d{1,4}\\s+|(?:(?:\\.\\s?){3,}|[-–—]{3,})\\s*(?:\\d{1,4}\\s+)?(?=\\d+(?:\\.\\d+)+\\.?\\s)|\\s\\d{1,4}\\s+(?=(?:\\d+(?:\\.\\d+)+\\.?\\s|\\d+\\.?\\s+\\p{Lu}|CAP[IÍ]TULO\\s|REFER[ÊE]NCIAS|AP[ÊE]NDICE|ANEXO|CONSIDERA|CONCLUS|INTRODU|BIBLIOGRAF|GLOSS|[A-Z]\\.\\s))|\\s(?=\\d+(?:\\.\\d+)+\\.?\\s?[-–]?\\s+\\p{Lu}{2})|\\s(?=CAP[IÍ]TULO\\s+(?:\\d+|[IVXLC]+)\\b)|(?<!CAP[IÍ]TULO)\\s(?=\\d{1,2}\\s?[-–.]\\s+\\p{Lu}{3})', 'gu');
       const cuts = [0]; let mm;
       while ((mm = reCut.exec(big))) cuts.push(mm.index + mm[0].length);
       cuts.push(big.length);
@@ -2089,6 +2089,9 @@ body.na-inicio #avisoBase { display: none; }
       if (dateBad.length) add({ id: 'ref-datas', cat: 'referencias', sec: '4.3.5.3', weight: 'baixa', title: 'Datas de acesso no formato "10 jan. 2024"', status: 'erro', score: 1 - dateBad.length / Math.max(1, nOnline), detail: `${dateBad.length} data(s) de acesso fora do padrão (dia, mês abreviado em minúsculas com ponto, ano).`, evidence: dateBad.slice(0, 6).map(x => ({ where: loc(model, x.r.p), text: clip(x.r.text.slice(x.r.text.search(/acesso em/i)), 60), note: x.note })) });
       // ano e ponto final
       const noYear = R.filter(r => !r.years.length && !/\[s\.\s?d\.\]|\[\d{3}-\??\]|\[\d{2}--\??\]|no prelo/i.test(r.text));
+      // o ano da data de acesso não substitui a data de publicação (Manual 4.3.5.4)
+      const accOnly = R.filter(r => r.yearOnlyAccess && !/\[s\.\s?d\.\]|\[\d{3}-\??\]|\[\d{2}--\??\]|no prelo/i.test(r.text));
+      if (accOnly.length) add({ id: 'ref-ano-acesso', cat: 'referencias', sec: '4.3.5.4', weight: 'baixa', title: 'Data de publicação além da data de acesso', status: 'alerta', detail: `${accOnly.length} referência(s) online só têm o ano da data de acesso. A data de acesso não substitui a de publicação; se não houver data, indique uma aproximada entre colchetes, como [2023?].`, evidence: accOnly.slice(0, 6).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) });
       if (noYear.length) add({ id: 'ref-ano', cat: 'referencias', sec: '4.3.5.4', weight: 'media', title: 'Data de publicação em todas as referências', status: 'erro', detail: `${noYear.length} referência(s) sem ano de publicação. Quando não houver data, indique uma data aproximada entre colchetes, como [2010?] ou [20--].`, evidence: noYear.slice(0, 6).map(r => ({ where: loc(model, r.p), text: clip(r.text, 100) })) });
       const noDot = R.filter(r => !/[.)\]]\s*$/.test(r.text) && !/https?:\/\/\S+$/.test(r.text));
       if (noDot.length) add({ id: 'ref-ponto', cat: 'referencias', sec: '4.2', weight: 'baixa', title: 'Referências terminadas em ponto', status: 'alerta', detail: `${noDot.length} referência(s) não terminam com ponto. A pontuação deve ser uniforme em todas as referências.` + (noDot.filter(r => /[.;]\s*\d{1,3}(?:,\s*\d{1,3})*\s*$/.test(r.text)).length > noDot.length / 2 ? ' Várias terminam com números de página depois do ponto (ex.: "...2024. 1"): parece a lista de páginas onde a obra é citada, gerada pelo LaTeX (pacote backref); retire-a.' : ''), evidence: noDot.slice(0, 5).map(r => ({ where: loc(model, r.p), text: clip(r.text.slice(-80), 80) })) });
@@ -2230,7 +2233,7 @@ body.na-inicio #avisoBase { display: none; }
     return items.map(({ p, text, lr, x0 }) => {
       const head = text.slice(0, 220).replace(/^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s*/, '');
       if (/^[_\-–—]{3,}/.test(head) && prev) { const r = Object.assign({}, prev, { p, text, dashRepeat: true, entryOk: true, years: [...new Set(text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || [])] }); prev = r; return r; }
-      const personal = /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(head);
+      const personal = /^(?:Mc|Mac)?[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(head); // "McNALLY, D." é a grafia do sobrenome
       const entity = /^[\p{Lu}][\p{Lu}\d'’\-]+(?:(?:[\s\-]+|\s[–&]\s)(?:[\p{Lu}\d'’\-]{2,}|DE|DA|DO|DOS|DAS|E|&))*(?:\s?\([\p{Lu}\d\-]{2,}\))?\.\s/u.test(head);
       const titleEntry = /^[\p{Lu}'’\-]{2,}\s+[\p{Ll}\d]/u.test(head) || (/^(O|A|OS|AS|UM|UMA)\s+[\p{Lu}]{2,}\s+[\p{Ll}]/u.test(head));
       const entryOk = personal || entity || titleEntry || /^[\p{Lu}]{2,}[\p{Lu}\s]*\(/u.test(head) || /^[\p{Lu}\d\s'’\-]{6,}:/u.test(head);
@@ -2246,9 +2249,9 @@ body.na-inicio #avisoBase { display: none; }
       { const sg = /^[^.]{2,160}?\(([\p{Lu}\d\-]{2,})\)\s*\./u.exec(head); if (sg) surnames.push(norm(sg[1])); const dash = /^([\p{Lu}\d]{2,})\s[–-]\s([\p{Lu}][^.]{3,120})\./u.exec(head); if (dash) { surnames.push(norm(dash[1])); surnames.push(norm(dash[2])); } }
       if (entity) { const ini = key.split(' ').filter(w => !/^(DE|DA|DO|DOS|DAS|E|EM|PARA)$/.test(w)).map(w => w[0]).join(''); if (ini.length >= 2) surnames.push(ini); }
       const years = [...new Set((text.replace(/\b(?:pp?|v|n)\.\s*\d+(?:\s*[-–]\s*\d+|\s\d+(?=\s*[,.]))?/gi, ' ').replace(/acess(?:o|ado) em\s*:?.{0,25}?(?<!\d)\d{4}(?!\d)/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
-      if (!years.length) { const y2 = text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g); if (y2) years.push(...y2); }
+      let yearOnlyAccess = false; if (!years.length) { yearOnlyAccess = true; const y2 = text.replace(/\b(?:pp?|v|n)\.\s*\d+(?:\s*[-–]\s*\d+|\s\d+(?=\s*[,.]))?/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g); if (y2) years.push(...y2); }
       const sortKey = strip(text.replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '')).toUpperCase().replace(/[^A-Z0-9 ,]/g, '');
-      const r = { p, text, lr, x0, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
+      const r = { p, text, lr, x0, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey, yearOnlyAccess: yearOnlyAccess && years.length > 0 }; prev = r; return r;
     });
   }
 
