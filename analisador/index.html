@@ -1159,7 +1159,10 @@ body.na-inicio #avisoBase { display: none; }
       let b = -1; for (const k in m) if (m[k] > b) { b = m[k]; bodyFs = +k; }
       if (bodyFs == null) bodyFs = model.bodyFs || 12;
     }
-    const bodyTextParas = body.filter(p => !p.inTable && T(p).length >= 200 && Math.abs((p.sizePt || bodyFs) - bodyFs) < 0.6 && (p.indLeftCm || 0) < 1.5);
+    // legendas (espaço simples pelo manual) e tabelas que o PDF não marca como tabela não são texto corrido
+    const capLike = (p) => /^(Figura|Gr[áa]fico|Quadro|Tabela|Mapa|Fotografia|Foto|Imagem|Diagrama|Esquema|Fluxograma|Organograma|Desenho|Planta|Ilustra[çc][ãa]o|Prancha)\s+\d+/i.test(T(p));
+    const tableLike = (p) => { if (model.kind !== 'pdf' || !p.lines || p.lines.length < 3) return false; const x = Math.min(...p.lines.map(l => l.x0)); const off = p.lines.slice(1).filter(l => l.x0 - x > 40).length; return off >= (p.lines.length - 1) * 0.4; };
+    const bodyTextParas = body.filter(p => !p.inTable && T(p).length >= 200 && Math.abs((p.sizePt || bodyFs) - bodyFs) < 0.6 && (p.indLeftCm || 0) < 1.5 && !capLike(p) && !tableLike(p));
 
     /* ==================== FORMATAÇÃO ==================== */
     const pg = model.page || {};
@@ -1351,8 +1354,24 @@ body.na-inicio #avisoBase { display: none; }
         const iA = pre.findIndex(p => /(aprovad[oa]\s+(em|por)|banca examinadora|examinad[oa] por|comiss[ãa]o examinadora)/i.test(T(p)));
         const seg = pre.slice(iA, iA + 25).map(T);
         const members = seg.map((t, k) => ({ t, k })).filter(x => /(prof[.ª]?|dr[.ªa]?\.?|me\.|ms\.|doutor|mestre)/i.test(x.t) && x.t.length < 160);
-        const oriIdx = seg.findIndex(t => /orientador/i.test(t));
-        if (members.length >= 2 && oriIdx > members[0].k + 1) add({ id: 'est-aprov-ordem', cat: 'estrutura', sec: '3.1.2.1.2 e', weight: 'baixa', title: 'Orientador em primeiro lugar na banca', status: 'alerta', detail: 'O orientador parece não ser o primeiro membro listado na banca. Ele preside a banca e deve aparecer primeiro.' });
+        // nomes dos orientadores pela folha de rosto ("Orientador(es): Prof. Dr. Fulano"), comparados com o primeiro membro da banca
+        const iO = pre.findIndex(p => /^orientador(a|es|as)?\b/i.test(T(p)));
+        const oriNames = [];
+        if (iO >= 0) {
+          const after = T(pre[iO]).replace(/^orientador(a|es|as)?\s*:?\s*/i, '');
+          const cands = (after ? [after] : []).concat(pre.slice(iO + 1, iO + 5).map(T).filter(t => /^(prof|dr|me\.|ms\.)/i.test(t)));
+          for (const c of cands) { const nm = c.replace(/^((prof[.ªa]*|dr[.ªa]*|me\.|ms\.|ph\.?\s?d\.?)\s*)+/gi, '').replace(/\s*[-–(].*$/, '').trim(); const toks = norm(nm).split(' ').filter(w => w.length > 2); if (toks.length >= 2) oriNames.push(toks); }
+        }
+        const segPage = pre[iA] ? pre[iA].page : null;
+        const mem = members.filter(x => segPage == null || !pre[iA + x.k] || pre[iA + x.k].page === segPage);
+        const isOri = (t) => oriNames.some(toks => toks.filter(w => norm(t).split(' ').includes(w)).length >= 2);
+        if (oriNames.length && mem.length >= 2) {
+          const pos = mem.findIndex(x => isOri(x.t));
+          if (pos > 0) add({ id: 'est-aprov-ordem', cat: 'estrutura', sec: '3.1.2.1.2 e', weight: 'baixa', title: 'Orientador em primeiro lugar na banca', status: 'alerta', detail: 'O orientador não é o primeiro membro listado na banca. Ele preside a banca e deve aparecer primeiro.', evidence: [{ where: loc(model, pre[iA + mem[pos].k] || pre[iA]), text: clip(mem[pos].t, 100), note: `${pos + 1}º da lista` }] });
+        } else if (!oriNames.length) {
+          const oriIdx = seg.findIndex((t, k) => /orientador/i.test(t) && (segPage == null || !pre[iA + k] || pre[iA + k].page === segPage));
+          if (mem.length >= 2 && oriIdx > mem[0].k + 1) add({ id: 'est-aprov-ordem', cat: 'estrutura', sec: '3.1.2.1.2 e', weight: 'baixa', title: 'Orientador em primeiro lugar na banca', status: 'alerta', detail: 'O orientador parece não ser o primeiro membro listado na banca. Ele preside a banca e deve aparecer primeiro.' });
+        }
       }
     }
     // resumo
@@ -1623,7 +1642,11 @@ body.na-inicio #avisoBase { display: none; }
           const exact = cands.find(b => same(b.title, tk));
           const rawSum = se.title.replace(/\s+/g, ''), rawBody = exact.h.title.replace(/\s+/g, '');
           if (rawSum.length && rawBody.length && !(rawSum.startsWith(rawBody) || rawBody.startsWith(rawSum)) && strip(rawSum).toUpperCase() === strip(rawBody).toUpperCase()) grafia.push({ c: se.num + ' ' + se.title, note: 'no texto: ' + clip(exact.raw, 60) });
-        } else missing.push({ c: se.num + ' ' + se.title, note: 'no texto: ' + clip(cands[0].raw, 60) });
+        } else {
+          // mesmo título com outro número no texto: o erro é a numeração do sumário, não a redação
+          const other = bodyHeads.find(b => b.key !== se.num && (b.title === tk || b.title.replace(/\s+/g, '') === tk.replace(/\s+/g, '')));
+          missing.push({ c: se.num + ' ' + se.title, note: other ? `no texto este título é ${other.key}; o número no sumário está errado` : 'no texto: ' + clip(cands[0].raw, 60) });
+        }
       }
       const sumKeys = sumEntries.map(e => sumParse(e.text)).filter(Boolean);
       const absent = bodyHeads.filter(b => b.h.level <= 2 && (isUpperText(b.h.title) || b.h.p.bold || b.h.p.outline != null || b.h.chapterWord || model.kind === 'pdf') && !sumKeys.some(s => s.num === b.key || titleKey(s.title).startsWith(b.title.slice(0, 25))));
@@ -1667,7 +1690,8 @@ body.na-inicio #avisoBase { display: none; }
       const capRe = /^(Figura|Gr[áa]fico|Quadro|Tabela|Mapa|Fotografia|Foto|Imagem|Diagrama|Esquema|Fluxograma|Organograma|Desenho|Planta|Retrato|Ilustra[çc][ãa]o|Prancha)\s+(\d+)\s*([–—\-:.])?\s*(.*)$/u;
       const caps = [];
       const scan = body.concat(post);
-      for (const p of scan) { const t = T(p); if (t.length > 300) continue; const m = capRe.exec(t); if (!m) continue; if (!m[4] || m[4].length < 2) continue; caps.push({ p, t, type: m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(), n: +m[2], sep: m[3] || '' }); }
+      // legendas longas (até 700 caracteres) só contam com separador depois do número
+      for (const p of scan) { const t = T(p); if (t.length > 700) continue; const m = capRe.exec(t); if (!m) continue; if (t.length > 300 && !m[3]) continue; if (!m[4] || m[4].length < 2) continue; caps.push({ p, t, type: m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(), n: +m[2], sep: m[3] || '' }); }
       if (caps.length) {
         const sepBad = caps.filter(c => !/[–—]/.test(c.sep));
         const seqBad = []; const byType = {};
@@ -1729,8 +1753,10 @@ body.na-inicio #avisoBase { display: none; }
           if (seen.has(s)) continue;
           const tail = t.slice(m.index + m[0].length, m.index + m[0].length + 12), head = t.slice(Math.max(0, m.index - 140), m.index);
           if (/^[-–]\s?[A-Z\d]/.test(tail) || /[-–]\s?$/.test(head.slice(-2))) continue; // SARS-CoV, EM- DAT
-          if (/^,\s*(c?\d{4}|[\p{Lu}][\p{Ll}])/u.test(tail) || /^\s?\(\s?(c?\d{4}|\[s)/.test(tail) || /^\s?et al/.test(tail)) continue; // chamada ou referência
+          if (/^[,;]\s*(c?\d{4}|[\p{Lu}][\p{Ll}])/u.test(tail) || /^\s?\(\s?(c?\d{4}|\[s)/.test(tail) || /^\s?et al/.test(tail)) continue; // chamada ou referência
           if (/[(;]\s?$/.test(head) && /^\s?,\s?\d/.test(tail)) continue;
+          // código de produto, equipamento ou enzima, não sigla: "EC 3.2.1.8", "Sorvall ST 16R", "Pentopan 500 BG", "LC-40D XR"
+          if (/^\s(?=[\w.\-]*\d)(?!(?:1[5-9]|20)\d{2}\b)[\w.\-]*(?:\d[.\-]\d|\d[A-Za-z]|[A-Za-z]\d)/.test(tail) || /(?:^|[\s(\/])[\w\-]*\d[\w\-]*\s$/.test(head.slice(-20))) continue;
           seen.set(s, true);
           const inParens = /\(\s?$/.test(head) || /\([^()]{0,80}[-–—,]\s?$/.test(head);
           const wordsIn = (x) => (x.match(/[\p{L}][\p{L}'’\-]+/gu) || []).filter(w => !STOP.test(w)).length;
@@ -1992,8 +2018,11 @@ body.na-inicio #avisoBase { display: none; }
         // 4.2: na entrada pelo título, artigos e palavras monossilábicas não contam para a alfabetação
         const ek = (r) => { let t = r.text.replace(/^(\[\d+\]|\(\d+\)|\d{1,3}\.)\s*/, ''); if (r.titleEntry && !r.personal) t = t.replace(MONO, ''); return strip(t.split(/[,.(:]/)[0]).toUpperCase().replace(/[^A-Z ]/g, '').trim(); };
         const gt = (x, y) => x && y && x !== y && x.localeCompare(y, 'pt', { sensitivity: 'base' }) > 0;
+        // no PDF, letras de fonte sem mapa de texto somem ("CĂLINOIU, L. F.; VODNAR" vira "NAR"): a primeira linha começa deslocada; não dá para alfabetar
+        const xs = R.map(r => r.x0).filter(v => v != null).sort((a, b) => a - b); const xMed = xs.length ? xs[Math.floor(xs.length / 2)] : null;
+        const cut = (r) => xMed != null && r.x0 != null && r.x0 - xMed > 15;
         for (let k = 1; k < R.length; k++) {
-          if (R[k].dashRepeat || R[k - 1].dashRepeat) continue; const a = ek(R[k - 1]), b = ek(R[k]);
+          if (R[k].dashRepeat || R[k - 1].dashRepeat || cut(R[k]) || cut(R[k - 1])) continue; const a = ek(R[k - 1]), b = ek(R[k]);
           if (!gt(a, b)) continue;
           // quem esta fora do lugar: a anterior (maior que a seguinte tambem) ou esta
           const c = R[k + 1] ? ek(R[k + 1]) : null, z = k >= 2 ? ek(R[k - 2]) : null;
@@ -2146,11 +2175,11 @@ body.na-inicio #avisoBase { display: none; }
       }
       if (cur) items.push(cur);
       // entrelinha de cada referência pelas suas próprias linhas (o parágrafo do PDF pode juntar várias)
-      for (const it of items) { const ls = (it.ls || []).filter(l => l.y != null && l.fs); const g = []; for (let k = 1; k < ls.length; k++) if (ls[k].pg === ls[k - 1].pg) g.push((ls[k].y - ls[k - 1].y) / ls[k].fs / 1.15); g.sort((a, b) => a - b); it.lr = g.length ? g[Math.floor(g.length / 2)] : null; delete it.ls; }
+      for (const it of items) { const ls = (it.ls || []).filter(l => l.y != null && l.fs); const g = []; for (let k = 1; k < ls.length; k++) if (ls[k].pg === ls[k - 1].pg) g.push((ls[k].y - ls[k - 1].y) / ls[k].fs / 1.15); g.sort((a, b) => a - b); it.lr = g.length ? g[Math.floor(g.length / 2)] : null; it.x0 = it.ls && it.ls[0] ? it.ls[0].x0 : null; delete it.ls; }
     } else items = paras.map(p => ({ p, text: T(p) }));
     items = items.filter(x => x.text.length > 15 && /[A-Za-z]/.test(x.text) && !/^(AP[ÊE]NDICE|ANEXO)\b/i.test(x.text) && !(x.text.length < 70 && !/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/.test(x.text) && /^(refer[êe]ncias|bibliografia|fontes|documentos|filmografia|obras|sites|outras|leis|legisla)/i.test(x.text)));
     let prev = null;
-    return items.map(({ p, text, lr }) => {
+    return items.map(({ p, text, lr, x0 }) => {
       const head = text.slice(0, 220).replace(/^(\[\d{1,4}\]|\(\d{1,4}\)|\d{1,3}\.)\s*/, '');
       if (/^[_\-–—]{3,}/.test(head) && prev) { const r = Object.assign({}, prev, { p, text, dashRepeat: true, entryOk: true, years: [...new Set(text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || [])] }); prev = r; return r; }
       const personal = /^[\p{Lu}'’\-]{2,}(?:[\s\-][\p{Lu}'’\-]{2,})*,\s+[\p{Lu}]/u.test(head);
@@ -2168,10 +2197,10 @@ body.na-inicio #avisoBase { display: none; }
       // sigla da entidade: "ENTIDADE (SIGLA)." e "SIGLA – ENTIDADE."
       { const sg = /^[^.]{2,160}?\(([\p{Lu}\d\-]{2,})\)\s*\./u.exec(head); if (sg) surnames.push(norm(sg[1])); const dash = /^([\p{Lu}\d]{2,})\s[–-]\s([\p{Lu}][^.]{3,120})\./u.exec(head); if (dash) { surnames.push(norm(dash[1])); surnames.push(norm(dash[2])); } }
       if (entity) { const ini = key.split(' ').filter(w => !/^(DE|DA|DO|DOS|DAS|E|EM|PARA)$/.test(w)).map(w => w[0]).join(''); if (ini.length >= 2) surnames.push(ini); }
-      const years = [...new Set((text.replace(/acess(?:o|ado) em\s*:?.{0,25}?(?<!\d)\d{4}(?!\d)/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
+      const years = [...new Set((text.replace(/\b(?:pp?|v|n)\.\s*\d+(?:\s*[-–]\s*\d+|\s\d+(?=\s*[,.]))?/gi, ' ').replace(/acess(?:o|ado) em\s*:?.{0,25}?(?<!\d)\d{4}(?!\d)/gi, ' ').match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g) || []))];
       if (!years.length) { const y2 = text.match(/(?<!\d)(1[5-9]\d{2}|20\d{2})(?!\d)/g); if (y2) years.push(...y2); }
       const sortKey = strip(text.replace(/^(O|A|OS|AS|UM|UMA|THE)\s+/i, '')).toUpperCase().replace(/[^A-Z0-9 ,]/g, '');
-      const r = { p, text, lr, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
+      const r = { p, text, lr, x0, personal, entity, titleEntry, entryOk, surnames, key, years, sortKey }; prev = r; return r;
     });
   }
 
